@@ -7,7 +7,7 @@
   <title>الرئيسية | NovaChat</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <script>
-    // التأكد من ظهور شاشة التحميل أولاً
+    // التأكد من شاشة التحميل والتحقق من الجلسة
     try {
       var isLoaded = sessionStorage.getItem("novachat_loaded");
       var forceNoLoad = window.location.search.indexOf("noload") !== -1;
@@ -23,58 +23,88 @@
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
 
     /* =========================================================
-       NOVACHAT — home.html
-       1) Tokens  2) Base  3) Layout  4) Components  5) Responsive
+       NOVACHAT — Tokens & Base Themes
        ========================================================= */
-
-    /* 1) Tokens */
     :root {
       --bg: #050508;
       --panel: #0a0a0f;
       --card: #101017;
-      --line: rgba(255, 255, 255, 0.07);
-      --line-strong: rgba(255, 255, 255, 0.12);
+      --card-hover: #151520;
+      --line: rgba(255, 255, 255, 0.08);
+      --line-strong: rgba(255, 255, 255, 0.15);
       --text: #f2f2f5;
       --muted: rgba(255, 255, 255, 0.55);
       --fuchsia: #e6007e;
       --fuchsia-light: #ff3fa4;
-      --fuchsia-bg: rgba(230, 0, 126, 0.10);
+      --fuchsia-bg: rgba(230, 0, 126, 0.12);
       --fuchsia-glow: rgba(230, 0, 126, 0.40);
+      --status-online: #10b981;
+      --status-away: #f59e0b;
+      --status-dnd: #ef4444;
+      --status-invisible: #6b7280;
       --radius: 14px;
       --topbar-h: 60px;
       --nav-h: 64px;
       --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
     }
 
-    /* 2) Base */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* خيارات حجم الخط */
+    body[data-font-size="small"] { font-size: 13px; }
+    body[data-font-size="medium"] { font-size: 14px; }
+    body[data-font-size="large"] { font-size: 16px; }
 
+    /* خيارات التوهج (Glow) */
+    body[data-glow="none"] { --fuchsia-glow: transparent; }
+    body[data-glow="none"] * { box-shadow: none !important; filter: none !important; }
+    body[data-glow="strong"] { --fuchsia-glow: rgba(230, 0, 126, 0.75); }
+    body[data-glow="strong"] .logo { filter: drop-shadow(0 0 12px var(--fuchsia)) drop-shadow(0 0 28px rgba(230, 0, 126, 0.6)) !important; }
+
+    /* خيار التباين العالي */
+    body[data-high-contrast="true"] {
+      --bg: #000000;
+      --panel: #050505;
+      --card: #0a0a0a;
+      --line: rgba(255, 255, 255, 0.25);
+      --line-strong: rgba(255, 255, 255, 0.45);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.85);
+    }
+
+    /* تقليل الحركة */
+    body[data-reduce-motion="true"] *,
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; background: var(--bg); overflow: hidden; }
 
     body {
       font-family: 'Cairo', "Segoe UI", Tahoma, system-ui, -apple-system, Roboto, Arial, sans-serif;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      font-size: 14px;
+      user-select: none;
     }
 
     button { font-family: inherit; color: inherit; cursor: pointer; background: none; border: none; }
-    input { font-family: inherit; color: inherit; }
+    input, select, textarea { font-family: inherit; color: inherit; }
     :focus-visible { outline: 2px solid var(--fuchsia); outline-offset: 2px; }
 
     .ic {
-      width: 22px; height: 22px; flex-shrink: 0;
+      width: 20px; height: 20px; flex-shrink: 0;
       fill: none; stroke: currentColor; stroke-width: 1.8;
       stroke-linecap: round; stroke-linejoin: round;
     }
     .logo { fill: var(--fuchsia); stroke: none; }
 
-    /* 3) Layout */
+    /* =========================================================
+       Layout
+       ========================================================= */
     .app {
       height: 100vh; height: 100dvh;
       display: grid;
       grid-template-rows: var(--topbar-h) minmax(0, 1fr);
-      direction: ltr; /* الشريط الجانبي يسار، واللوحة يمين، بغض النظر عن RTL */
+      direction: ltr; /* الشريط الجانبي يسار واللوحة يمين */
     }
 
     .topbar {
@@ -83,55 +113,55 @@
       border-bottom: 1px solid var(--line);
       background: rgba(8, 8, 12, 0.85);
       backdrop-filter: blur(12px);
-      position: relative; z-index: 20;
+      position: relative; z-index: 30;
     }
 
-    .brand { display: flex; align-items: center; gap: 12px; direction: ltr; }
+    .brand { display: flex; align-items: center; gap: 12px; direction: ltr; text-decoration: none; }
     .brand .logo { width: 20px; height: 24px; filter: drop-shadow(0 0 6px var(--fuchsia-glow)); }
     .brand-name {
       color: var(--fuchsia); font-weight: 300; font-size: 15px;
       letter-spacing: 0.38em; text-transform: uppercase;
     }
 
-    .top-actions { display: flex; align-items: center; gap: 6px; position: relative; }
+    .top-actions { display: flex; align-items: center; gap: 8px; position: relative; }
+
+    .network-badge {
+      display: none; align-items: center; gap: 6px; padding: 4px 10px;
+      border-radius: 999px; background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; font-size: 11px;
+    }
+    .network-badge.show { display: inline-flex; }
 
     .shell {
       display: grid;
-      grid-template-columns: 84px 300px minmax(0, 1fr) 290px;
+      grid-template-columns: 88px 300px minmax(0, 1fr) 290px;
       min-height: 0;
     }
     .shell > * { direction: rtl; min-height: 0; }
 
-    /* 4) Components */
-
-    /* ---- Icon buttons ---- */
-    .icon-btn {
-      width: 40px; height: 40px; border-radius: 12px;
-      display: grid; place-items: center; color: var(--muted);
-      position: relative;
-      transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
-    }
-    .icon-btn:hover { color: var(--fuchsia-light); background: var(--fuchsia-bg); }
-    .icon-btn:active { transform: scale(0.94); }
-    .icon-btn .badge-dot {
-      position: absolute; top: 9px; right: 10px; width: 8px; height: 8px;
-      border-radius: 50%; background: var(--fuchsia);
-      box-shadow: 0 0 8px var(--fuchsia); border: 2px solid var(--bg);
-    }
-    .icon-btn .badge-dot[hidden] { display: none; }
-
-    /* ---- Rail (الشريط الجانبي) ---- */
+    /* =========================================================
+       Rail (الشريط الجانبي وقائمة التنقل)
+       ========================================================= */
     .rail {
       display: flex; flex-direction: column; align-items: center;
-      padding: 14px 0; gap: 6px;
+      padding: 12px 0 0;
       background: var(--panel); border-right: 1px solid var(--line);
+      position: relative; height: 100%; min-height: 0;
     }
-    .rail .logo { width: 28px; height: 34px; margin: 2px 0 14px; filter: drop-shadow(0 0 8px var(--fuchsia-glow)); }
+    .rail .logo { width: 28px; height: 34px; margin: 2px 0 12px; filter: drop-shadow(0 0 8px var(--fuchsia-glow)); }
+
+    /* حاوية الأيقونات القابلة للتمرير الداخلي دون زحزحة البطاقة */
+    .rail-nav-scroll {
+      flex: 1; min-height: 0; width: 100%; overflow-y: auto; overflow-x: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding-bottom: 8px; scrollbar-width: none;
+    }
+    .rail-nav-scroll::-webkit-scrollbar { display: none; }
 
     .nav-btn {
-      width: 66px; padding: 9px 0 7px; border-radius: 14px;
+      width: 70px; padding: 9px 0 7px; border-radius: 14px;
       display: flex; flex-direction: column; align-items: center; gap: 4px;
-      font-size: 10.5px; color: var(--muted); position: relative;
+      font-size: 11px; color: var(--muted); position: relative;
       transition: color 0.2s, background 0.2s, transform 0.2s var(--ease);
     }
     .nav-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); transform: translateY(-1px); }
@@ -147,39 +177,148 @@
     }
     .nav-btn .count[hidden] { display: none; }
 
-    .rail-sep { width: 32px; height: 1px; background: var(--line); margin: 8px 0; }
+    .rail-sep { width: 32px; height: 1px; background: var(--line); margin: 6px 0; flex-shrink: 0; }
 
     .add-server {
       width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
-      color: var(--fuchsia-light); border: 1px dashed rgba(230, 0, 126, 0.5);
+      color: var(--fuchsia-light); border: 1px dashed rgba(230, 0, 126, 0.5); flex-shrink: 0;
       transition: background 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
     }
     .add-server:hover { background: var(--fuchsia-bg); box-shadow: 0 0 16px rgba(230, 0, 126, 0.25); transform: rotate(90deg); }
 
-    .rail-user {
-      margin-top: auto; width: 72px; padding: 10px 4px 8px;
-      display: flex; flex-direction: column; align-items: center; gap: 5px;
-      border-radius: 14px; background: var(--card); border: 1px solid var(--line);
+    /* =========================================================
+       بطاقة المستخدم الثابتة بأسفل الشريط الجانبي
+       ========================================================= */
+    .rail-bottom {
+      width: 100%; padding: 8px 6px 12px; margin-top: auto; position: relative; flex-shrink: 0;
+      background: var(--panel); border-top: 1px solid var(--line);
     }
-    .rail-user .u-name { font-size: 11px; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; }
-    .rail-user .u-status { font-size: 10px; color: var(--fuchsia-light); direction: ltr; }
 
-    /* ---- Avatar + status dot ---- */
+    .rail-user-card {
+      width: 100%; min-height: 52px; padding: 6px 8px; border-radius: 14px;
+      display: flex; align-items: center; gap: 8px; background: var(--card);
+      border: 1px solid var(--line); transition: all 0.2s var(--ease); text-align: start;
+    }
+    .rail-user-card:hover {
+      background: rgba(255, 255, 255, 0.06); border-color: rgba(230, 0, 126, 0.4);
+      box-shadow: 0 0 14px rgba(230, 0, 126, 0.15); transform: translateY(-1px);
+    }
+    .rail-user-card:active { transform: scale(0.97); }
+
+    .rail-user-card .u-meta {
+      flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;
+    }
+    .rail-user-card .u-name {
+      font-size: 11.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr;
+    }
+    .rail-user-card .u-status {
+      font-size: 10px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .rail-user-card .u-arrow {
+      color: var(--muted); font-size: 12px; margin-inline-start: auto; flex-shrink: 0;
+    }
+
+    /* الأفاتار ونقطة الحالة بلونها الديناميكي */
     .av {
-      --s: 42px; position: relative; width: var(--s); height: var(--s); border-radius: 50%; flex-shrink: 0;
-      display: grid; place-items: center;
-      font-weight: 600; font-size: calc(var(--s) * 0.38); color: #ffb3da; direction: ltr;
+      --s: 40px; position: relative; width: var(--s); height: var(--s); border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center; font-weight: 700; font-size: calc(var(--s) * 0.38);
+      color: #ffb3da; direction: ltr;
       background: linear-gradient(135deg, #2b0f20, #130810);
       border: 1px solid rgba(230, 0, 126, 0.35);
     }
     .dot {
       position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%;
-      border: 2px solid var(--panel); background: #46464f;
+      border: 2px solid var(--panel); background: var(--status-invisible);
+      transition: background 0.25s, box-shadow 0.25s;
     }
-    .dot.online { background: var(--fuchsia); box-shadow: 0 0 8px var(--fuchsia); }
-    .dot.away { background: #7a3d63; }
+    .dot.online { background: var(--status-online); box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); }
+    .dot.away { background: var(--status-away); box-shadow: 0 0 8px rgba(245, 158, 11, 0.6); }
+    .dot.dnd { background: var(--status-dnd); box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+    .dot.invisible, .dot.offline { background: var(--status-invisible); box-shadow: none; }
+    .dot.static { position: relative; bottom: auto; right: auto; display: inline-block; flex-shrink: 0; border: none; }
 
-    /* ---- List panel (المحادثات) ---- */
+    /* =========================================================
+       القائمة المنبثقة لبطاقة المستخدم (تفتح للأعلى)
+       ========================================================= */
+    .user-popover {
+      position: absolute; bottom: calc(100% + 10px); left: 6px; width: 295px;
+      background: rgba(14, 14, 22, 0.96); backdrop-filter: blur(24px);
+      border: 1px solid var(--line-strong); border-radius: 18px;
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.75), 0 0 24px rgba(230, 0, 126, 0.15);
+      padding: 16px; z-index: 100; display: none; flex-direction: column; gap: 14px;
+      direction: rtl; animation: popRise 0.25s var(--ease) both;
+    }
+    .user-popover.show { display: flex; }
+
+    @keyframes popRise {
+      from { opacity: 0; transform: translateY(12px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .popover-header {
+      display: flex; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    .popover-user-info { flex: 1; min-width: 0; }
+    .popover-display-name { font-size: 15px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .popover-username-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 3px;
+    }
+    .popover-handle { font-size: 12px; color: var(--muted); direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .btn-copy-username {
+      display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; padding: 2px 8px;
+      border-radius: 6px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--line);
+      color: var(--text); transition: background 0.2s, border-color 0.2s;
+    }
+    .btn-copy-username:hover { background: var(--fuchsia-bg); border-color: var(--fuchsia); color: var(--fuchsia-light); }
+
+    .popover-section-title { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 6px; }
+
+    .status-options-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 6px;
+    }
+    .status-opt {
+      display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 10px;
+      background: var(--card); border: 1px solid var(--line); font-size: 12px; text-align: start;
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .status-opt:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-1px); }
+    .status-opt.active { border-color: var(--fuchsia); background: var(--fuchsia-bg); font-weight: 700; }
+
+    .custom-status-row {
+      display: flex; align-items: center; gap: 6px; margin-top: 6px;
+    }
+    .custom-status-row input {
+      flex: 1; height: 34px; border-radius: 8px; background: var(--card); border: 1px solid var(--line);
+      padding: 0 10px; font-size: 12px; outline: none; transition: border-color 0.2s;
+    }
+    .custom-status-row input:focus { border-color: var(--fuchsia); }
+    .custom-status-row button {
+      height: 34px; padding: 0 10px; border-radius: 8px; background: var(--fuchsia-bg);
+      border: 1px solid var(--fuchsia); color: var(--fuchsia-light); font-size: 12px; font-weight: 600;
+    }
+
+    .popover-nav-list { display: flex; flex-direction: column; gap: 4px; }
+    .popover-nav-item {
+      display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px;
+      font-size: 13px; color: var(--text); transition: background 0.2s, color 0.2s; text-align: start;
+    }
+    .popover-nav-item:hover { background: rgba(255, 255, 255, 0.06); color: var(--fuchsia-light); }
+    .popover-nav-item .ic { width: 17px; height: 17px; color: var(--muted); }
+    .popover-nav-item:hover .ic { color: var(--fuchsia-light); }
+
+    .popover-footer {
+      padding-top: 10px; border-top: 1px solid var(--line);
+    }
+    .popover-logout-btn {
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 9px; border-radius: 10px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ff5c7a; font-size: 13px; font-weight: 600; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .popover-logout-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: #ef4444; transform: translateY(-1px); }
+
+    /* =========================================================
+       List Panel (قائمة المحادثات)
+       ========================================================= */
     .list {
       display: flex; flex-direction: column; background: var(--bg);
       border-right: 1px solid var(--line); min-width: 0;
@@ -217,15 +356,13 @@
     .btn .ic { width: 18px; height: 18px; }
 
     .list .add-friend { margin: 0 16px 10px; }
-
     .section-label { padding: 8px 18px 6px; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
 
     .scroll { overflow-y: auto; min-height: 0; flex: 1; padding: 0 8px 12px; scrollbar-width: thin; scrollbar-color: #26262e transparent; }
 
     .row {
       width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; text-align: start;
-      border: 1px solid transparent;
-      transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease);
+      border: 1px solid transparent; transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease);
     }
     .row:hover { background: rgba(255, 255, 255, 0.04); transform: translateX(-2px); }
     .row.active { background: var(--fuchsia-bg); border-color: rgba(230, 0, 126, 0.3); }
@@ -240,7 +377,9 @@
 
     .empty-note { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px; line-height: 1.8; }
 
-    /* ---- Main ---- */
+    /* =========================================================
+       Main Area (Welcome, Chat, Friends)
+       ========================================================= */
     .main { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
     .main::before {
       content: ""; position: absolute; inset: 0; pointer-events: none;
@@ -252,8 +391,9 @@
       flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center;
       text-align: center; gap: 14px; padding: 24px;
     }
-    .main[data-state="welcome"] .welcome { display: flex; animation: rise 0.6s var(--ease) both; }
+    .main[data-state="welcome"] .welcome { display: flex; animation: rise 0.5s var(--ease) both; }
     .main[data-state="chat"] .chat { display: flex; }
+    .main[data-state="friends"] .friends-view { display: flex; }
 
     .welcome .logo {
       width: clamp(72px, 12vw, 108px); height: auto; margin-bottom: 10px;
@@ -270,7 +410,7 @@
     }
     @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 
-    /* ---- Chat view ---- */
+    /* ---- Chat View ---- */
     .chat { display: none; flex-direction: column; flex: 1; min-height: 0; }
     .chat-head {
       display: flex; align-items: center; gap: 12px; padding: 12px 16px;
@@ -301,107 +441,275 @@
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     .composer input:focus { border-color: var(--fuchsia); box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.15); }
-    .send-btn {
-      width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff;
-      background: linear-gradient(135deg, #b8005f, var(--fuchsia)); box-shadow: 0 0 14px rgba(230, 0, 126, 0.3);
-      transition: transform 0.2s var(--ease), box-shadow 0.2s;
-    }
-    .send-btn:hover { box-shadow: 0 0 22px rgba(230, 0, 126, 0.5); transform: translateY(-1px); }
-    .send-btn .ic { transform: scaleX(-1); } /* السهم يتجه لليسار في الواجهة العربية */
 
-    /* ---- Online panel (اللوحة اليمنى) ---- */
-    .online {
-      display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line);
-      transition: transform 0.35s var(--ease), box-shadow 0.4s;
+    .send-btn {
+      width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; flex-shrink: 0;
+      color: #fff; background: linear-gradient(135deg, #b8005f, var(--fuchsia));
+      box-shadow: 0 0 14px rgba(230, 0, 126, 0.3); transition: transform 0.2s var(--ease), box-shadow 0.2s;
     }
-    .online.pulse { box-shadow: inset 0 0 0 1px var(--fuchsia), 0 0 24px rgba(230, 0, 126, 0.25); }
-    .online .row .actions { display: flex; gap: 2px; opacity: 0.55; transition: opacity 0.2s; }
-    .online .row:hover .actions { opacity: 1; }
-    .online .icon-btn { width: 34px; height: 34px; }
-    .online .icon-btn .ic { width: 18px; height: 18px; }
+    .send-btn:hover { box-shadow: 0 0 22px rgba(230, 0, 126, 0.55); transform: translateY(-1px); }
+    .send-btn:active { transform: scale(0.92); }
+    .send-btn .ic { width: 18px; height: 18px; transform: rotate(180deg); }
+
+    /* =========================================================
+       Friends View (شاشة وإدارة الأصدقاء الكاملة)
+       ========================================================= */
+    .friends-view {
+      display: none; flex-direction: column; flex: 1; min-height: 0; background: var(--bg);
+    }
+    .friends-head {
+      display: flex; flex-direction: column; gap: 12px; padding: 16px 20px;
+      border-bottom: 1px solid var(--line); background: rgba(8, 8, 12, 0.6);
+    }
+    .friends-tabs-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .ftab-btn {
+      padding: 7px 14px; border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted);
+      border: 1px solid transparent; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .ftab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.05); }
+    .ftab-btn.active { color: #fff; background: var(--fuchsia-bg); border-color: rgba(230, 0, 126, 0.4); }
+    .ftab-btn.add-tab {
+      background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #10b981;
+    }
+    .ftab-btn.add-tab.active { background: #10b981; color: #fff; }
+
+    .friends-search {
+      position: relative; width: 100%; max-width: 380px;
+    }
+    .friends-search input {
+      width: 100%; height: 38px; border-radius: 10px; padding: 0 12px; padding-inline-start: 36px;
+      background: var(--card); border: 1px solid var(--line); font-size: 13px; outline: none;
+    }
+    .friends-search .ic {
+      position: absolute; top: 10px; inset-inline-start: 12px; width: 16px; height: 16px; color: var(--muted);
+    }
+
+    .friends-content {
+      flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .friend-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 16px; border-radius: 14px; background: var(--card); border: 1px solid var(--line);
+      transition: background 0.2s, border-color 0.2s, transform 0.15s;
+    }
+    .friend-card:hover {
+      background: var(--card-hover); border-color: rgba(255, 255, 255, 0.12); transform: translateX(-2px);
+    }
+    .friend-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .friend-details { min-width: 0; }
+    .friend-name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .friend-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .friend-sub.online { color: var(--status-online); }
+    .friend-actions { display: flex; align-items: center; gap: 8px; }
+
+    .friend-action-btn {
+      width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+      background: rgba(255, 255, 255, 0.05); color: var(--text); border: 1px solid var(--line);
+      transition: all 0.2s;
+    }
+    .friend-action-btn:hover { background: var(--fuchsia-bg); border-color: var(--fuchsia); color: var(--fuchsia-light); }
+    .friend-action-btn.accept { background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #10b981; }
+    .friend-action-btn.reject { background: rgba(239, 68, 68, 0.15); border-color: #ef4444; color: #ef4444; }
+
+    /* صندوق إضافة صديق داخل التبويب */
+    .add-friend-pane {
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 20px;
+      display: flex; flex-direction: column; gap: 16px; max-width: 580px;
+    }
+    .invite-link-box {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px;
+    }
+    .invite-link-text { font-size: 12px; color: var(--muted); direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* =========================================================
+       Online Panel (المتصلون الآن)
+       ========================================================= */
+    .online {
+      display: flex; flex-direction: column; background: var(--panel);
+      border-left: 1px solid var(--line); min-width: 0; transition: transform 0.35s var(--ease);
+    }
+    .online.pulse { animation: panelPulse 0.9s var(--ease); }
+    @keyframes panelPulse {
+      0%, 100% { background: var(--panel); }
+      50%      { background: rgba(230, 0, 126, 0.12); }
+    }
     .drawer-close { display: none; }
 
-    .scrim {
-      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 40;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    }
-    .scrim.show { opacity: 1; pointer-events: auto; }
-
-    /* ---- Notifications dropdown ---- */
+    /* =========================================================
+       Dropdowns & Modals
+       ========================================================= */
     .dropdown {
-      position: absolute; top: 48px; right: 0; width: min(320px, 90vw); z-index: 30;
-      background: var(--card); border: 1px solid var(--line-strong); border-radius: var(--radius);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(230, 0, 126, 0.12);
-      opacity: 0; transform: translateY(-6px); pointer-events: none;
-      transition: opacity 0.2s, transform 0.2s var(--ease); direction: rtl;
+      position: absolute; top: calc(100% + 10px); inset-inline-end: 0;
+      width: 280px; border-radius: 16px; background: rgba(14, 14, 22, 0.96); backdrop-filter: blur(20px);
+      border: 1px solid var(--line-strong); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      display: none; flex-direction: column; overflow: hidden; z-index: 50;
+      animation: rise 0.25s var(--ease) both;
     }
-    .dropdown.show { opacity: 1; transform: none; pointer-events: auto; }
-    .dropdown header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 600; }
-    .dropdown header button { font-size: 12px; color: var(--fuchsia-light); font-weight: 400; }
-    .notif { padding: 12px 14px; font-size: 13px; line-height: 1.7; border-bottom: 1px solid var(--line); }
-    .notif:last-child { border-bottom: none; }
-    .notif small { display: block; color: var(--muted); font-size: 11px; }
+    .dropdown.show { display: flex; }
+    .dropdown header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 13px; font-weight: 600;
+    }
+    .dropdown header button { font-size: 11px; color: var(--fuchsia-light); }
 
-    /* ---- Modal ---- */
     .modal-wrap {
-      position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px;
-      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
-      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      position: fixed; inset: 0; z-index: 100;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); padding: 16px;
     }
-    .modal-wrap.show { opacity: 1; pointer-events: auto; }
+    .modal-wrap.show { display: flex; }
     .modal {
-      width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--line-strong);
-      border-radius: 20px; padding: 24px; box-shadow: 0 0 40px rgba(230, 0, 126, 0.15);
-      transform: translateY(12px) scale(0.98); transition: transform 0.3s var(--ease);
+      width: min(440px, 100%); background: var(--panel); border: 1px solid var(--line-strong);
+      border-radius: 20px; padding: 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 0, 126, 0.15);
+      animation: rise 0.3s var(--ease) both;
     }
-    .modal-wrap.show .modal { transform: none; }
     .modal h3 { font-size: 18px; margin-bottom: 6px; }
-    .modal p { color: var(--muted); font-size: 13px; margin-bottom: 16px; line-height: 1.7; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
     .modal input {
-      width: 100%; height: 46px; border-radius: 12px; padding: 0 14px; background: #08080c;
-      border: 1px solid var(--line); outline: none; font-size: 15px; direction: ltr;
+      width: 100%; height: 44px; border-radius: 12px; padding: 0 14px; background: var(--card);
+      border: 1px solid var(--line); outline: none; font-size: 14px; margin-bottom: 6px;
     }
-    .modal input:focus { border-color: var(--fuchsia); box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.15); }
-    .modal .err { color: #ff5c7a; font-size: 12px; margin-top: 6px; min-height: 16px; }
-    .modal .row-btns { display: flex; gap: 10px; margin-top: 10px; }
-    .modal .row-btns .btn { flex: 1; }
+    .modal .err { color: #ff5c7a; font-size: 11.5px; min-height: 16px; margin-bottom: 14px; }
+    .modal .row-btns { display: flex; justify-content: flex-end; gap: 10px; }
 
-    /* ---- Toast ---- */
+    /* =========================================================
+       Settings Modal (لوحة الإعدادات الشاملة بتفاصيلها)
+       ========================================================= */
+    .settings-modal {
+      width: min(920px, 95vw); height: min(680px, 90vh);
+      background: var(--panel); border: 1px solid var(--line-strong); border-radius: 22px;
+      display: grid; grid-template-rows: 56px 1fr; overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(230, 0, 126, 0.2);
+      animation: popRise 0.3s var(--ease) both; direction: rtl;
+    }
+    .settings-head {
+      display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+      border-bottom: 1px solid var(--line); background: rgba(8, 8, 12, 0.5);
+    }
+    .settings-head-title { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; }
+    .saved-pill {
+      display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
+      background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #10b981; font-size: 11px; opacity: 0; transition: opacity 0.3s;
+    }
+    .saved-pill.show { opacity: 1; }
+
+    .settings-body {
+      display: grid; grid-template-columns: 220px 1fr; min-height: 0;
+    }
+
+    .settings-sidebar {
+      background: rgba(0, 0, 0, 0.2); border-left: 1px solid var(--line);
+      padding: 14px 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;
+    }
+    .settings-tab-btn {
+      width: 100%; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px;
+      font-size: 13px; font-weight: 600; color: var(--muted); text-align: start; transition: all 0.2s;
+    }
+    .settings-tab-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); }
+    .settings-tab-btn.active { color: #fff; background: var(--fuchsia-bg); border: 1px solid rgba(230, 0, 126, 0.35); }
+    .settings-tab-btn .ic { width: 18px; height: 18px; }
+
+    .settings-panels {
+      padding: 24px; overflow-y: auto; min-height: 0;
+    }
+    .settings-panel { display: none; flex-direction: column; gap: 20px; }
+    .settings-panel.active { display: flex; animation: rise 0.25s var(--ease) both; }
+
+    .setting-group {
+      display: flex; flex-direction: column; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid var(--line);
+    }
+    .setting-group:last-child { border-bottom: none; }
+    .setting-title { font-size: 14px; font-weight: 700; color: var(--text); }
+    .setting-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    /* عناصر التحكم (Toggles, Selects, Buttons) */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    }
+    .toggle-switch {
+      position: relative; width: 46px; height: 26px; border-radius: 999px; background: rgba(255, 255, 255, 0.15);
+      cursor: pointer; transition: background 0.25s; flex-shrink: 0; border: 1px solid var(--line);
+    }
+    .toggle-switch::after {
+      content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 20px; height: 20px;
+      border-radius: 50%; background: #fff; transition: transform 0.25s var(--ease);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .toggle-switch.on { background: var(--fuchsia); border-color: var(--fuchsia); }
+    .toggle-switch.on::after { transform: translateX(-20px); }
+    body[dir="ltr"] .toggle-switch.on::after { transform: translateX(20px); }
+
+    .radio-pill-group {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px;
+    }
+    .radio-pill {
+      padding: 6px 14px; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+      font-size: 12.5px; cursor: pointer; transition: all 0.2s;
+    }
+    .radio-pill:hover { background: rgba(255, 255, 255, 0.05); }
+    .radio-pill.active { background: var(--fuchsia-bg); border-color: var(--fuchsia); color: var(--fuchsia-light); font-weight: 700; }
+
+    .select-input {
+      height: 38px; border-radius: 10px; background: var(--card); border: 1px solid var(--line);
+      padding: 0 12px; font-size: 13px; color: var(--text); outline: none;
+    }
+
+    /* كرت المعاينة المباشرة للمظهر */
+    .live-preview-card {
+      background: var(--card); border: 1px solid var(--line-strong); border-radius: 14px; padding: 16px;
+      display: flex; flex-direction: column; gap: 8px; margin-top: 8px;
+    }
+
+    /* كرت منطقة الخطر */
+    .danger-box {
+      border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.06); border-radius: 14px; padding: 16px;
+    }
+
+    /* مؤشر شريطي لمستوى صوت المايك */
+    .audio-vu-meter {
+      width: 100%; height: 12px; border-radius: 6px; background: var(--card); border: 1px solid var(--line);
+      overflow: hidden; position: relative; margin-top: 6px;
+    }
+    .audio-vu-bar {
+      height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #f59e0b, #ef4444);
+      transition: width 0.1s linear;
+    }
+
     .toast {
-      position: fixed; bottom: 28px; left: 50%; transform: translate(-50%, 20px); z-index: 80;
-      max-width: calc(100vw - 32px); background: #15151c; border: 1px solid var(--fuchsia);
-      padding: 12px 18px; border-radius: 12px; font-size: 13px;
-      box-shadow: 0 0 20px rgba(230, 0, 126, 0.3); opacity: 0; pointer-events: none;
-      transition: opacity 0.3s, transform 0.3s var(--ease);
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: rgba(18, 18, 28, 0.95); border: 1px solid var(--fuchsia); color: #fff;
+      padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(230, 0, 126, 0.3);
+      opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s var(--ease);
+      z-index: 200; white-space: nowrap; max-width: 90vw; overflow: hidden; text-overflow: ellipsis;
     }
-    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ---- Bottom nav (للهاتف فقط) ---- */
+    /* =========================================================
+       Responsive
+       ========================================================= */
     .bottom-nav { display: none; }
 
-    /* 5) Responsive */
-
-    /* لابتوب صغير / تابلت: اللوحة اليمنى تتحول إلى درج جانبي */
     @media (max-width: 1100px) {
-      .shell { grid-template-columns: 84px 280px minmax(0, 1fr); }
+      .shell { grid-template-columns: 88px 280px minmax(0, 1fr); }
       .online {
-        position: fixed; top: var(--topbar-h); bottom: 0; right: 0; width: min(330px, 100%); z-index: 50;
+        position: fixed; top: var(--topbar-h); bottom: 0; right: 0; width: min(320px, 100%); z-index: 40;
         transform: translateX(100%); box-shadow: -12px 0 40px rgba(0, 0, 0, 0.6);
       }
       .online.open { transform: none; }
       .drawer-close { display: grid; }
     }
 
-    /* هاتف */
     @media (max-width: 760px) {
       :root { --topbar-h: 56px; }
       .topbar { padding: 0 12px; }
-      .brand-name { letter-spacing: 0.3em; }
-
       .shell { grid-template-columns: minmax(0, 1fr); padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
       .rail { display: none; }
 
-      /* الشاشات: home (ترحيب) / messages (قائمة) / chat (محادثة) */
       .list, .main { display: none; border: none; }
       body[data-view="messages"] .list { display: flex; }
       body[data-view="home"] .main,
@@ -410,9 +718,6 @@
       body[data-view="chat"] .shell { padding-bottom: 0; }
       body[data-view="chat"] .bottom-nav { display: none; }
       .back-btn { display: grid; }
-      .msg { max-width: 85%; }
-
-      .online { top: var(--topbar-h); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); width: 100%; }
 
       .bottom-nav {
         display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; direction: ltr;
@@ -423,18 +728,17 @@
       .bottom-nav .nav-btn.active { background: none; }
       .bottom-nav .nav-btn.active::before { left: 30%; right: 30%; top: 0; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
       .bottom-nav .nav-btn .count { right: calc(50% - 22px); }
-      .toast { bottom: calc(var(--nav-h) + 16px); }
-    }
 
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .settings-body { grid-template-columns: 1fr; }
+      .settings-sidebar { display: flex; flex-direction: row; overflow-x: auto; border-left: none; border-bottom: 1px solid var(--line); }
+      .settings-tab-btn { white-space: nowrap; }
     }
   </style>
 </head>
 
-<body data-view="home">
+<body data-view="home" data-font-size="medium" data-glow="subtle">
 
-  <!-- أيقونات SVG (Sprite) -->
+  <!-- أيقونات SVG المشتركة -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
     <symbol id="i-logo" viewBox="0 0 100 120"><path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z"/></symbol>
     <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></symbol>
@@ -449,19 +753,34 @@
     <symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11.5L21 3l-8.5 18-2.2-7.3z"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
     <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 4v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2h-8a2 2 0 00-2 2z"/><path d="M16 18v2a2 2 0 01-2 2H6a2 2 0 01-2-2V8a2 2 0 012-2h2"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="12" r="1.5"/></symbol>
   </svg>
 
   <div class="app">
 
-    <!-- ===== أعلى الصفحة ===== -->
+    <!-- ===== الشريط العلوي ===== -->
     <header class="topbar">
-      <a href="index.html?reload=1" class="brand" title="عرض شاشة البداية والتحميل" style="text-decoration:none; cursor:pointer;">
+      <a href="index.html?reload=1" class="brand" title="عرض شاشة البداية والتحميل">
         <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
         <span class="brand-name">NovaChat</span>
       </a>
 
       <div class="top-actions">
-        <button class="icon-btn" id="topSearch" aria-label="بحث">
+        <span class="network-badge" id="offlineBadge">
+          <span class="dot dnd static"></span>
+          غير متصل
+        </span>
+        <button class="icon-btn" id="topSearch" aria-label="بحث سريع">
           <svg class="ic"><use href="#i-search"/></svg>
         </button>
         <button class="icon-btn" id="bellBtn" aria-label="الإشعارات" aria-expanded="false">
@@ -469,57 +788,133 @@
           <span class="badge-dot" id="bellDot"></span>
         </button>
         <button class="icon-btn" id="topAvatar" aria-label="حسابي" style="width:auto">
-          <span class="av" style="--s:34px" id="topAvatarEl"></span>
+          <span class="av" style="--s:36px" id="topAvatarEl">
+            <span id="topAvatarChar">N</span>
+            <span class="dot online" id="topStatusDot"></span>
+          </span>
         </button>
 
         <div class="dropdown" id="notifMenu" role="menu">
           <header><span>الإشعارات</span><button id="markRead">تعليم الكل كمقروء</button></header>
           <div id="notifList"></div>
         </div>
-
-        <div class="dropdown" id="userMenu" role="menu" style="width: 210px;">
-          <header><span id="userMenuName">حسابي</span></header>
-          <div style="padding: 8px; display: flex; flex-direction: column; gap: 6px;">
-            <a href="index.html?reload=1" class="btn btn-ghost" style="width: 100%; justify-content: flex-start; text-decoration: none; font-size: 13px; height: 38px;">
-              <svg class="ic" style="width: 16px; height: 16px;"><use href="#i-logo"/></svg>
-              شاشة التحميل
-            </a>
-            <button type="button" id="logoutBtn" class="btn btn-ghost" style="width: 100%; justify-content: flex-start; color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3); font-size: 13px; height: 38px;">
-              <svg class="ic" style="width: 16px; height: 16px;"><use href="#i-close"/></svg>
-              تسجيل الخروج
-            </button>
-          </div>
-        </div>
       </div>
     </header>
 
     <div class="shell">
 
-      <!-- ===== الشريط الجانبي (يسار) ===== -->
+      <!-- ===== الشريط الجانبي (Rail) ===== -->
       <nav class="rail" aria-label="التنقل الرئيسي">
-        <a href="index.html?reload=1" title="عرض شاشة البداية والتحميل" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
+        <a href="index.html?reload=1" title="عرض شاشة البداية" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
           <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
         </a>
 
-        <button class="nav-btn active" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>الرئيسية</button>
-        <button class="nav-btn" data-nav="friends"><svg class="ic"><use href="#i-users"/></svg>الأصدقاء</button>
-        <button class="nav-btn" data-nav="messages"><svg class="ic"><use href="#i-chat"/></svg>الرسائل<span class="count" data-total-unread hidden></span></button>
-        <button class="nav-btn" data-nav="calls"><svg class="ic"><use href="#i-phone"/></svg>المكالمات</button>
-        <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg>الإعدادات</button>
+        <!-- حاوية أيقونات التنقل القابلة للتمرير الداخلي دون زحزحة البطاقة -->
+        <div class="rail-nav-scroll">
+          <button class="nav-btn active" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>الرئيسية</button>
+          <button class="nav-btn" data-nav="friends"><svg class="ic"><use href="#i-users"/></svg>الأصدقاء</button>
+          <button class="nav-btn" data-nav="messages"><svg class="ic"><use href="#i-chat"/></svg>الرسائل<span class="count" data-total-unread hidden></span></button>
+          <button class="nav-btn" data-nav="calls"><svg class="ic"><use href="#i-phone"/></svg>المكالمات</button>
+          <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg>الإعدادات</button>
 
-        <div class="rail-sep"></div>
-        <button class="add-server" id="addServer" aria-label="إضافة سيرفر أو مجموعة" title="إضافة سيرفر / مجموعة">
-          <svg class="ic"><use href="#i-plus"/></svg>
-        </button>
+          <div class="rail-sep"></div>
+          <button class="add-server" id="addServer" aria-label="إضافة مجموعة أو خادم" title="إضافة خادم / غرفة">
+            <svg class="ic"><use href="#i-plus"/></svg>
+          </button>
+        </div>
 
-        <div class="rail-user">
-          <span class="av" style="--s:40px" id="railAvatar"></span>
-          <span class="u-name" id="railName"></span>
-          <span class="u-status">Online</span>
+        <!-- بطاقة المستخدم الثابتة بأسفل الشريط الجانبي دائماً -->
+        <div class="rail-bottom">
+          <button type="button" class="rail-user-card" id="railUserCard" aria-haspopup="true" aria-expanded="false" title="بطاقة المستخدم - انقر للخيارات">
+            <div class="av" style="--s:40px" id="railAvatar">
+              <span id="railAvatarChar">N</span>
+              <span class="dot online" id="railStatusDot"></span>
+            </div>
+            <div class="u-meta">
+              <span class="u-name" id="railName">Nova_User</span>
+              <span class="u-status online" id="railStatusText">متصل</span>
+            </div>
+            <span class="u-arrow"><svg class="ic" style="width:14px;height:14px;"><use href="#i-dots"/></svg></span>
+          </button>
+
+          <!-- القائمة المنبثقة لبطاقة المستخدم (تفتح للأعلى) -->
+          <div class="user-popover" id="userPopover" role="menu" aria-label="قائمة المستخدم">
+            <div class="popover-header">
+              <div class="av" style="--s:46px;" id="popoverAvatar">
+                <span id="popoverAvatarChar">N</span>
+                <span class="dot online" id="popoverStatusDot"></span>
+              </div>
+              <div class="popover-user-info">
+                <div class="popover-display-name" id="popoverDisplayName">Nova_User</div>
+                <div class="popover-username-row">
+                  <span class="popover-handle" id="popoverUsername">@nova_user</span>
+                  <button type="button" class="btn-copy-username" id="copyUsernameBtn" title="نسخ اسم المستخدم">
+                    <svg class="ic" style="width:12px;height:12px;"><use href="#i-copy"/></svg>
+                    نسخ
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- تغيير الحالة -->
+            <div>
+              <div class="popover-section-title">تغيير الحالة</div>
+              <div class="status-options-grid">
+                <button type="button" class="status-opt active" data-status="online">
+                  <span class="dot online static"></span>
+                  <span>متصل (Online)</span>
+                </button>
+                <button type="button" class="status-opt" data-status="away">
+                  <span class="dot away static"></span>
+                  <span>بالخارج (Away)</span>
+                </button>
+                <button type="button" class="status-opt" data-status="dnd">
+                  <span class="dot dnd static"></span>
+                  <span>عدم الإزعاج</span>
+                </button>
+                <button type="button" class="status-opt" data-status="invisible">
+                  <span class="dot invisible static"></span>
+                  <span>مخفي (Offline)</span>
+                </button>
+              </div>
+              <div class="custom-status-row">
+                <input type="text" id="customStatusInput" placeholder="أضف حالة مخصصة (مثال: في اجتماع)…" maxlength="35" />
+                <button type="button" id="saveCustomStatusBtn">حفظ</button>
+              </div>
+            </div>
+
+            <!-- التنقل السريع -->
+            <div class="popover-nav-list">
+              <button type="button" class="popover-nav-item" id="popoverProfileBtn">
+                <svg class="ic"><use href="#i-user"/></svg>
+                <span>الملف الشخصي</span>
+              </button>
+              <button type="button" class="popover-nav-item" id="popoverSettingsBtn">
+                <svg class="ic"><use href="#i-gear"/></svg>
+                <span>الإعدادات</span>
+              </button>
+              <button type="button" class="popover-nav-item" id="popoverMuteBtn">
+                <svg class="ic" id="popoverMuteIcon"><use href="#i-bell"/></svg>
+                <span id="popoverMuteText">كتم التنبيهات مؤقتاً</span>
+              </button>
+              <button type="button" class="popover-nav-item" id="popoverHelpBtn">
+                <svg class="ic"><use href="#i-help"/></svg>
+                <span>المساعدة والإبلاغ عن مشكلة</span>
+              </button>
+            </div>
+
+            <!-- زر تسجيل الخروج المميز -->
+            <div class="popover-footer">
+              <button type="button" class="popover-logout-btn" id="popoverLogoutBtn">
+                <svg class="ic" style="width:16px;height:16px;"><use href="#i-logout"/></svg>
+                <span>تسجيل الخروج</span>
+              </button>
+            </div>
+          </div>
         </div>
       </nav>
 
-      <!-- ===== قائمة المحادثات ===== -->
+      <!-- ===== قائمة المحادثات (الجانب الأيسر الأوسط) ===== -->
       <aside class="list" aria-label="المحادثات">
         <div class="panel-head">
           <h2>المحادثات</h2>
@@ -528,32 +923,32 @@
 
         <div class="search-box">
           <svg class="ic"><use href="#i-search"/></svg>
-          <input type="search" id="listSearch" placeholder="ابحث عن مستخدم…" autocomplete="off" />
+          <input type="search" id="listSearch" placeholder="ابحث عن محادثة أو صديق…" autocomplete="off" />
         </div>
 
         <button class="btn btn-primary add-friend" data-open-add>
           <svg class="ic"><use href="#i-userplus"/></svg>إضافة صديق
         </button>
 
-        <div class="section-label">الرسائل الخاصة</div>
+        <div class="section-label">الرسائل الخاصة المباشرة</div>
         <div class="scroll" id="chatList"></div>
       </aside>
 
-      <!-- ===== المنتصف ===== -->
+      <!-- ===== منطقة المحتوى المركزية (الرئيسية / الدردشة / الأصدقاء) ===== -->
       <main class="main" id="main" data-state="welcome">
 
-        <!-- شاشة الترحيب -->
+        <!-- 1) شاشة الترحيب -->
         <section class="welcome">
           <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
           <h1>مرحبًا بك في NOVACHAT</h1>
-          <p>ابدأ محادثة جديدة أو اختر أحد أصدقائك.</p>
+          <p>منصة المحادثات والتواصل الفوري السحابية الحديثة.</p>
           <div class="actions">
             <button class="btn btn-primary" data-open-add><svg class="ic"><use href="#i-userplus"/></svg>إضافة صديق</button>
             <button class="btn btn-ghost" id="startChat"><svg class="ic"><use href="#i-chat"/></svg>بدء محادثة</button>
           </div>
         </section>
 
-        <!-- عرض المحادثة -->
+        <!-- 2) عرض المحادثة النشطة -->
         <section class="chat" id="chatView">
           <div class="chat-head">
             <button class="icon-btn back-btn" id="backBtn" aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button>
@@ -562,13 +957,37 @@
               <div class="name" id="chatName"></div>
               <div class="sub" id="chatStatus"></div>
             </div>
-            <button class="icon-btn" data-soon="المكالمات" aria-label="مكالمة"><svg class="ic"><use href="#i-phone"/></svg></button>
+            <button class="icon-btn" data-action="call" aria-label="مكالمة"><svg class="ic"><use href="#i-phone"/></svg></button>
           </div>
           <div class="messages" id="messages"></div>
           <form class="composer" id="composer" autocomplete="off">
-            <input type="text" id="msgInput" placeholder="اكتب رسالة…" maxlength="500" />
+            <input type="text" id="msgInput" placeholder="اكتب رسالتك هنا…" maxlength="500" />
             <button class="send-btn" type="submit" aria-label="إرسال"><svg class="ic"><use href="#i-send"/></svg></button>
           </form>
+        </section>
+
+        <!-- 3) عرض وإدارة الأصدقاء الكامل (Friends View) -->
+        <section class="friends-view" id="friendsView">
+          <div class="friends-head">
+            <div class="friends-tabs-bar">
+              <button type="button" class="ftab-btn active" data-ftab="all">الكل</button>
+              <button type="button" class="ftab-btn" data-ftab="online">المتصلون</button>
+              <button type="button" class="ftab-btn" data-ftab="pending">
+                قيد الانتظار
+                <span class="count-pill" id="pendingCountBadge" style="margin-inline-start:4px;">1</span>
+              </button>
+              <button type="button" class="ftab-btn" data-ftab="blocked">المحظورون</button>
+              <button type="button" class="ftab-btn add-tab" data-ftab="add">إضافة صديق</button>
+            </div>
+            <div class="friends-search">
+              <svg class="ic"><use href="#i-search"/></svg>
+              <input type="search" id="friendsSearchInput" placeholder="بحث في قائمة الأصدقاء…" autocomplete="off" />
+            </div>
+          </div>
+
+          <div class="friends-content" id="friendsContent">
+            <!-- سيتم توليد البطاقات برمجياً عبر الـ JavaScript -->
+          </div>
         </section>
       </main>
 
@@ -583,7 +1002,7 @@
       </aside>
     </div>
 
-    <!-- ===== شريط التنقل السفلي (هاتف) ===== -->
+    <!-- شريط التنقل السفلي للهواتف -->
     <nav class="bottom-nav" aria-label="التنقل">
       <button class="nav-btn active" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>الرئيسية</button>
       <button class="nav-btn" data-nav="friends"><svg class="ic"><use href="#i-users"/></svg>الأصدقاء</button>
@@ -595,11 +1014,11 @@
 
   <div class="scrim" id="scrim"></div>
 
-  <!-- نافذة إضافة صديق -->
+  <!-- نافذة إضافة صديق السريعة -->
   <div class="modal-wrap" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
     <form class="modal" id="addForm" novalidate>
       <h3 id="addTitle">إضافة صديق</h3>
-      <p>اكتب اسم المستخدم لإرسال طلب صداقة.</p>
+      <p>اكتب اسم المستخدم لإرسال طلب صداقة فوري.</p>
       <input type="text" id="addInput" placeholder="@username" autocomplete="off" />
       <div class="err" id="addErr"></div>
       <div class="row-btns">
@@ -609,6 +1028,382 @@
     </form>
   </div>
 
+  <!-- نافذة الإعدادات الشاملة (Settings Modal) المكونة من عمودين والأقسام السبعة -->
+  <div class="modal-wrap" id="settingsModal" role="dialog" aria-modal="true" aria-labelledby="settingsHeadTitle">
+    <div class="settings-modal">
+      <div class="settings-head">
+        <div class="settings-head-title">
+          <svg class="ic" style="color:var(--fuchsia-light);"><use href="#i-gear"/></svg>
+          <span id="settingsHeadTitle">إعدادات NovaChat</span>
+          <span class="saved-pill" id="savedPill">✓ تم الحفظ</span>
+        </div>
+        <button type="button" class="icon-btn" id="closeSettingsBtn" aria-label="إغلاق الإعدادات">
+          <svg class="ic"><use href="#i-close"/></svg>
+        </button>
+      </div>
+
+      <div class="settings-body">
+        <!-- عمود الأقسام الجانبي -->
+        <div class="settings-sidebar" role="tablist">
+          <button type="button" class="settings-tab-btn active" data-stab="appearance">
+            <svg class="ic"><use href="#i-gear"/></svg>
+            <span>المظهر</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="notifications">
+            <svg class="ic"><use href="#i-bell"/></svg>
+            <span>الإشعارات</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="chats">
+            <svg class="ic"><use href="#i-chat"/></svg>
+            <span>المحادثات</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="privacy">
+            <svg class="ic"><use href="#i-shield"/></svg>
+            <span>الخصوصية والأمان</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="account">
+            <svg class="ic"><use href="#i-user"/></svg>
+            <span>الحساب والبروفايل</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="voice">
+            <svg class="ic"><use href="#i-mic"/></svg>
+            <span>الصوت والفيديو</span>
+          </button>
+          <button type="button" class="settings-tab-btn" data-stab="about">
+            <svg class="ic"><use href="#i-help"/></svg>
+            <span>حول التطبيق</span>
+          </button>
+        </div>
+
+        <!-- عمود محتوى القسم المحدد -->
+        <div class="settings-panels">
+
+          <!-- 1. المظهر (Appearance) -->
+          <div class="settings-panel active" id="stab-appearance">
+            <div class="setting-group">
+              <div class="setting-title">اللغة واتجاه العرض (Language)</div>
+              <div class="setting-desc">اختر لغة الواجهة المفضلة، سيتم قلب الاتجاه تلقائياً.</div>
+              <div class="radio-pill-group" id="langOptions">
+                <button type="button" class="radio-pill active" data-val="ar">العربية (RTL)</button>
+                <button type="button" class="radio-pill" data-val="en">English (LTR)</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">حجم الخط (Font Size)</div>
+              <div class="setting-desc">تعديل مقاس النصوص لقراءة أكثر راحة.</div>
+              <div class="radio-pill-group" id="fontSizeOptions">
+                <button type="button" class="radio-pill" data-val="small">صغير (13px)</button>
+                <button type="button" class="radio-pill active" data-val="medium">متوسط (14px - الافتراضي)</button>
+                <button type="button" class="radio-pill" data-val="large">كبير (16px)</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">شدة التوهج النيوني (Glow Intensity)</div>
+              <div class="setting-desc">التحكم في قوة إضاءة وتوهج عناصر الثيم الفوشي.</div>
+              <div class="radio-pill-group" id="glowOptions">
+                <button type="button" class="radio-pill" data-val="none">بدون توهج</button>
+                <button type="button" class="radio-pill active" data-val="subtle">خفيف (الافتراضي)</button>
+                <button type="button" class="radio-pill" data-val="strong">قوي (Cyberpunk)</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">تقليل الحركة (Reduce Motion)</div>
+                  <div class="setting-desc">تعطيل حركات الانتقال والتأثيرات الحركية لمنع الإجهاد البصري.</div>
+                </div>
+                <div class="toggle-switch" id="toggleReduceMotion"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">وضع التباين العالي (High Contrast)</div>
+                  <div class="setting-desc">زيادة وضوح الحدود والنصوص لتسهيل القراءة.</div>
+                </div>
+                <div class="toggle-switch" id="toggleHighContrast"></div>
+              </div>
+            </div>
+
+            <!-- كرت المعاينة المباشرة -->
+            <div class="live-preview-card">
+              <div style="font-size:11px;color:var(--muted);">معاينة مباشرة للتنسيق الحالي:</div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span class="av" style="--s:38px;">N<span class="dot online"></span></span>
+                <div>
+                  <div style="font-weight:700;">مستخدم NovaChat</div>
+                  <div style="font-size:12px;color:var(--fuchsia-light);">التوهج والخط مطبقان بنجاح 🚀</div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;">
+              <button type="button" class="btn btn-ghost" id="resetAppearanceBtn">إعادة ضبط المظهر للوضع الافتراضي</button>
+            </div>
+          </div>
+
+          <!-- 2. الإشعارات (Notifications) -->
+          <div class="settings-panel" id="stab-notifications">
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">تنبيهات الرسائل الجديدة</div>
+                  <div class="setting-desc">تلقي إشعار فوري عند وصول رسالة جديدة.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleMsgNotif"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">تنبيهات طلبات الصداقة</div>
+                  <div class="setting-desc">إشعارك عند استلام طلب صداقة جديد.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleFriendNotif"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">نغمة صوت الإشعار</div>
+                  <div class="setting-desc">تشغيل صوت ناعم عند استلام التنبيهات.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleSoundNotif"></div>
+              </div>
+              <div style="margin-top:6px;">
+                <button type="button" class="btn btn-ghost" id="testSoundBtn" style="height:36px;font-size:12px;">
+                  <svg class="ic" style="width:16px;height:16px;"><use href="#i-volume"/></svg>
+                  تجربة الصوت 🔊
+                </button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">إشعارات المتصفح (Desktop Notifications)</div>
+              <div class="setting-desc">إرسال التنبيهات حتى وإن كان المتصفح مصغراً.</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+                <button type="button" class="btn btn-primary" id="requestBrowserNotifBtn" style="height:36px;font-size:12px;">
+                  طلب تفعيل إذن المتصفح
+                </button>
+                <span class="count-pill" id="browserNotifStatus">لم يُطلب بعد</span>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">إظهار محتوى الرسالة في التنبيه</div>
+                  <div class="setting-desc">مفيد لزيادة الخصوصية في حال إيقافه لمنع ظهور النصوص للآخرين.</div>
+                </div>
+                <div class="toggle-switch on" id="togglePreviewText"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. المحادثات (Chats) -->
+          <div class="settings-panel" id="stab-chats">
+            <div class="setting-group">
+              <div class="setting-title">مفتاح إرسال الرسالة في شريط الكتابة</div>
+              <div class="setting-desc">حدد سلوك زر Enter في لوحة المفاتيح.</div>
+              <div class="radio-pill-group" id="sendKeyOptions">
+                <button type="button" class="radio-pill active" data-val="enter">Enter للإرسال (Shift+Enter لسطر جديد)</button>
+                <button type="button" class="radio-pill" data-val="ctrlEnter">Ctrl + Enter للإرسال (Enter لسطر جديد)</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">إظهار مؤشر "يكتب الآن…"</div>
+                  <div class="setting-desc">إشعار الطرف الآخر عندما تكون بصدد كتابة رسالة.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleTypingIndicator"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">المعاينة التلقائية للروابط</div>
+                  <div class="setting-desc">توليد بطاقة للمواقع والروابط المرسلة في الدردشة.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleLinkPreview"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">سجل المحادثات</div>
+              <div class="setting-desc">مسح الرسائل المحفوظة محلياً في جهازك.</div>
+              <div style="margin-top:6px;">
+                <button type="button" class="btn btn-ghost" id="clearChatHistoryBtn" style="color:#ff5c7a;border-color:rgba(239,68,68,0.4);height:36px;font-size:12px;">
+                  <svg class="ic" style="width:16px;height:16px;"><use href="#i-trash"/></svg>
+                  مسح سجل المحادثات
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. الخصوصية والأمان (Privacy & Security) -->
+          <div class="settings-panel" id="stab-privacy">
+            <div class="setting-group">
+              <div class="setting-title">من يمكنه إرسال طلب صداقة لي؟</div>
+              <select class="select-input" id="friendRequestPrivacySelect" style="max-width:240px;margin-top:4px;">
+                <option value="everyone" selected>الجميع</option>
+                <option value="friends_of_friends">أصدقاء الأصدقاء</option>
+                <option value="nobody">لا أحد</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">من يمكنه رؤية حالتي وتواجدي؟</div>
+              <select class="select-input" id="statusVisibilitySelect" style="max-width:240px;margin-top:4px;">
+                <option value="everyone" selected>الجميع</option>
+                <option value="friends">الأصدقاء فقط</option>
+                <option value="nobody">لا أحد</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <div class="toggle-row">
+                <div>
+                  <div class="setting-title">إيصالات القراءة (Read Receipts)</div>
+                  <div class="setting-desc">إشعار الآخرين عند قراءتك لرسائلهم.</div>
+                </div>
+                <div class="toggle-switch on" id="toggleReadReceipts"></div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">الجلسات والأجهزة النشطة</div>
+              <div class="setting-desc">المتصفح الحالي: نشط الآن (Windows / Chrome).</div>
+              <div style="margin-top:6px;">
+                <button type="button" class="btn btn-ghost" id="logoutAllSessionsBtn" style="height:36px;font-size:12px;">
+                  تسجيل الخروج من كافة الأجهزة الأخرى
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. الحساب والبروفايل (Account) -->
+          <div class="settings-panel" id="stab-account">
+            <div class="setting-group">
+              <div class="setting-title">الاسم الظاهر (Display Name)</div>
+              <input type="text" class="select-input" id="accountDisplayNameInput" placeholder="اسمك الظاهر للأصدقاء" style="max-width:320px;" />
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">اسم المستخدم (@username)</div>
+              <input type="text" class="select-input" id="accountUsernameInput" placeholder="اسم المستخدم" style="max-width:320px;" />
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">النبذة الشخصية (Bio)</div>
+              <input type="text" class="select-input" id="accountBioInput" placeholder="أهلاً بك في حسابي…" style="max-width:440px;" />
+              <div style="margin-top:8px;">
+                <button type="button" class="btn btn-primary" id="saveAccountBtn" style="height:36px;font-size:12px;">حفظ التغييرات</button>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">الحسابات المربوطة سحابياً</div>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;">
+                <div style="display:flex;align-items:center;gap:8px;background:var(--card);padding:8px 14px;border-radius:10px;border:1px solid var(--line);">
+                  <span>Google</span>
+                  <span class="count-pill" style="color:#10b981;border-color:#10b981;">جاهز</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;background:var(--card);padding:8px 14px;border-radius:10px;border:1px solid var(--line);">
+                  <span>Snapchat</span>
+                  <span class="count-pill" style="color:#10b981;border-color:#10b981;">جاهز</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">تنزيل بياناتي (Export Data)</div>
+              <div class="setting-desc">تحميل نسخة احتياطية كاملة من بياناتك ومحادثاتك بصيغة JSON.</div>
+              <div style="margin-top:6px;">
+                <button type="button" class="btn btn-ghost" id="downloadDataBtn" style="height:36px;font-size:12px;">
+                  <svg class="ic" style="width:16px;height:16px;"><use href="#i-copy"/></svg>
+                  تنزيل ملف البيانات
+                </button>
+              </div>
+            </div>
+
+            <!-- منطقة الخطر لحذف الحساب -->
+            <div class="danger-box">
+              <div style="color:#ef4444;font-weight:700;font-size:14px;margin-bottom:4px;">منطقة الخطر: حذف الحساب نهائياً</div>
+              <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+                بمجرد حذف الحساب سيتم مسح ملفك الشخصي ورسائلك ولا يمكن استرجاعها مطلقاً.
+              </div>
+              <button type="button" class="btn btn-ghost" id="deleteAccountBtn" style="color:#ef4444;border-color:#ef4444;height:36px;font-size:12px;">
+                <svg class="ic" style="width:16px;height:16px;"><use href="#i-trash"/></svg>
+                حذف الحساب
+              </button>
+            </div>
+          </div>
+
+          <!-- 6. الصوت والفيديو (Voice & Video) -->
+          <div class="settings-panel" id="stab-voice">
+            <div class="setting-group">
+              <div class="setting-title">الميكروفون (Microphone)</div>
+              <select class="select-input" id="micSelect" style="max-width:340px;">
+                <option value="default">الميكروفون الافتراضي للجهاز</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">الكاميرا (Camera)</div>
+              <select class="select-input" id="cameraSelect" style="max-width:340px;">
+                <option value="default">كاميرا الجهاز المدمجة (HD)</option>
+              </select>
+            </div>
+
+            <div class="setting-group">
+              <div class="setting-title">اختبار الميكروفون ومستوى الصوت</div>
+              <div class="setting-desc">تأكد من وضوح صوتك قبل بدء المكالمات الصوتية والمرئية.</div>
+              <div style="margin-top:8px;">
+                <button type="button" class="btn btn-ghost" id="testMicBtn" style="height:36px;font-size:12px;">
+                  <svg class="ic" style="width:16px;height:16px;"><use href="#i-mic"/></svg>
+                  بدء فحص المايك
+                </button>
+              </div>
+              <div class="audio-vu-meter">
+                <div class="audio-vu-bar" id="audioVuBar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. حول التطبيق (About) -->
+          <div class="settings-panel" id="stab-about">
+            <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:20px 0;">
+              <svg class="ic logo" viewBox="0 0 100 120" style="width:60px;height:72px;"><use href="#i-logo"/></svg>
+              <h2 style="font-size:20px;font-weight:700;">NovaChat</h2>
+              <div class="count-pill" style="color:var(--fuchsia-light);border-color:var(--fuchsia);">الإصدار 2.5.0 (Beta)</div>
+              <p style="font-size:13px;color:var(--muted);max-width:380px;line-height:1.7;">
+                تطبيق دردشة متطور مبني بتقنيات الويب الحديثة والاتصال السحابي الفوري المدعوم بـ Supabase.
+              </p>
+            </div>
+
+            <div class="setting-group">
+              <div style="display:flex;justify-content:space-around;font-size:13px;">
+                <a href="#" class="popover-nav-item" id="aboutTermsLink">الشروط والأحكام</a>
+                <a href="#" class="popover-nav-item" id="aboutPrivacyLink">سياسة الخصوصية</a>
+                <a href="#" class="popover-nav-item" id="aboutReportLink">الإبلاغ عن مشكلة</a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast" role="status"></div>
 
   <script>
@@ -616,161 +1411,882 @@
       'use strict';
 
       /* =====================================================
-         بيانات تجريبية — لاحقًا تُستبدل بالبيانات من السيرفر
+         1. بيانات المستخدم الأساسية والحساب
          ===================================================== */
-      var ME = { name: 'Nova_User' };
+      var ME = {
+        name: 'Nova_User',
+        username: 'nova_user',
+        bio: 'متاح في NovaChat ✨',
+        status: 'online',
+        customStatus: ''
+      };
+
       try {
         var savedUser = localStorage.getItem('novachat_user');
         if (savedUser) {
           var uObj = JSON.parse(savedUser);
-          if (uObj && uObj.username) {
+          if (uObj.username) {
             ME.name = uObj.username;
+            ME.username = uObj.username.toLowerCase().replace(/\s+/g, '_');
           }
         }
       } catch (e) {}
 
-      // التحقق من جلسة Supabase (في حال تسجيل الدخول عبر Google أو Snapchat)
-      if (window.NovaAuth) {
-        window.NovaAuth.getUser().then(function (u) {
-          if (u) {
-            var name = (u.profile && (u.profile.display_name || u.profile.username)) ||
-                       (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name || u.user_metadata.username)) ||
-                       u.email.split('@')[0];
-            ME.name = name;
-            try {
-              localStorage.setItem('novachat_user', JSON.stringify({
-                username: name,
-                email: u.email,
-                id: u.id
-              }));
-            } catch (e) {}
-            renderMe();
-          }
-        }).catch(function () {});
-      }
+      // استرجاع الإعدادات المحفوظة
+      var SETTINGS = {
+        appearance: { lang: 'ar', fontSize: 'medium', glow: 'subtle', reduceMotion: false, highContrast: false },
+        notifications: { messages: true, friendRequests: true, sound: true, browser: false, showPreview: true },
+        chats: { sendKey: 'enter', typingIndicator: true, linkPreview: true },
+        privacy: { friendRequestsFrom: 'everyone', statusVisibility: 'everyone', readReceipts: true }
+      };
 
+      try {
+        var savedSet = localStorage.getItem('novachat_settings');
+        if (savedSet) {
+          SETTINGS = Object.assign(SETTINGS, JSON.parse(savedSet));
+        }
+      } catch (e) {}
+
+      /* =====================================================
+         2. قائمة الأصدقاء والمحادثات التجريبية
+         ===================================================== */
       var USERS = [
-        { id: 1, name: 'Layla',  status: 'online',  unread: 3, msgs: [['in', 'هلا! شفت التحديث الجديد؟', '10:42'], ['out', 'لسا، شو فيه؟', '10:44'], ['in', 'واجهة جديدة بالكامل 🔥', '10:45']] },
-        { id: 2, name: 'Omar',   status: 'online',  unread: 0, msgs: [['out', 'كيفك يا عمر؟', '09:10'], ['in', 'تمام الحمدلله، وإنت؟', '09:12']] },
-        { id: 3, name: 'Sara',   status: 'away',    unread: 1, msgs: [['in', 'ببعتلك الملفات بعد شوي', '08:30']] },
-        { id: 4, name: 'Yazan',  status: 'online',  unread: 0, msgs: [['in', 'جاهز للمكالمة؟', 'أمس']] },
-        { id: 5, name: 'Dana',   status: 'offline', unread: 0, msgs: [['out', 'يسلموا على المساعدة', 'أمس'], ['in', 'العفو 🌸', 'أمس']] },
-        { id: 6, name: 'Khaled', status: 'offline', unread: 0, msgs: [] },
-        { id: 7, name: 'Rama',   status: 'online',  unread: 0, msgs: [] }
+        { id: 1, name: 'Layla',  username: 'layla_99', status: 'online',  unread: 3, msgs: [['in', 'هلا! شفت التحديث الجديد؟', '10:42'], ['out', 'لسا، شو فيه؟', '10:44'], ['in', 'بطاقة المستخدم والإعدادات الفخمة نزلت 🔥', '10:45']] },
+        { id: 2, name: 'Omar',   username: 'omar_dev', status: 'away',    unread: 0, msgs: [['out', 'كيفك يا عمر؟', '09:10'], ['in', 'تمام الحمدلله، بالخارج حالياً وبشوفك المسا', '09:12']] },
+        { id: 3, name: 'Sara',   username: 'sara_art', status: 'dnd',     unread: 1, msgs: [['in', 'في اجتماع حالياً، عدم الإزعاج', '08:30']] },
+        { id: 4, name: 'Yazan',  username: 'yazan_k',  status: 'online',  unread: 0, msgs: [['in', 'جاهز للمكالمة؟', 'أمس']] },
+        { id: 5, name: 'Dana',   username: 'dana_w',   status: 'offline', unread: 0, msgs: [['out', 'يسلموا على المساعدة', 'أمس'], ['in', 'العفو 🌸', 'أمس']] }
+      ];
+
+      var PENDING_REQUESTS = [
+        { id: 101, name: 'Ahmad_Gamer', username: 'ahmad_g', type: 'incoming', time: 'منذ ساعتين' },
+        { id: 102, name: 'Rami_Code',   username: 'rami_c',  type: 'outgoing', time: 'أمس' }
+      ];
+
+      var BLOCKED_USERS = [
+        { id: 201, name: 'Spam_Bot', username: 'spammer_123' }
       ];
 
       var NOTIFS = [
         { text: 'Layla أرسلت لك 3 رسائل جديدة', time: 'قبل 5 دقائق' },
-        { text: 'مرحبًا بك في NOVACHAT 🎉', time: 'اليوم' },
-        { text: 'Rama أصبحت متصلة الآن', time: 'اليوم' }
+        { text: 'Ahmad_Gamer أرسل لك طلب صداقة جديد', time: 'قبل ساعتين' },
+        { text: 'مرحبًا بك في بطاقة المستخدم وإعدادات NOVACHAT 🎉', time: 'اليوم' }
       ];
 
-      var STATUS_LABEL = { online: 'Online', away: 'Away', offline: 'Offline' };
+      var STATUS_NAMES = {
+        online: 'متصل (Online)',
+        away: 'بالخارج (Away)',
+        dnd: 'عدم الإزعاج (DND)',
+        invisible: 'مخفي (Offline)'
+      };
 
       /* =====================================================
-         أدوات مساعدة
+         3. الأدوات المساعدة (Helpers)
          ===================================================== */
       var $ = function (s, r) { return (r || document).querySelector(s); };
       var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-
-      function el(tag, cls, text) {
-        var n = document.createElement(tag);
-        if (cls) n.className = cls;
-        if (text !== undefined) n.textContent = text;
-        return n;
-      }
-
-      function icon(id) {
-        var ns = 'http://www.w3.org/2000/svg';
-        var svg = document.createElementNS(ns, 'svg');
-        svg.setAttribute('class', 'ic');
-        var use = document.createElementNS(ns, 'use');
-        use.setAttribute('href', '#' + id);
-        svg.appendChild(use);
-        return svg;
-      }
-
-      function avatar(name, size, status) {
-        var a = el('span', 'av', name.charAt(0).toUpperCase());
-        a.style.setProperty('--s', size + 'px');
-        if (status) a.appendChild(el('span', 'dot ' + status));
-        return a;
-      }
-
-      var isMobile = window.matchMedia('(max-width: 760px)');
-      var isDrawer = window.matchMedia('(max-width: 1100px)');
 
       var toastEl = $('#toast'), toastTimer;
       function toast(msg) {
         toastEl.textContent = msg;
         toastEl.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2800);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 3000);
+      }
+
+      function showAutoSaved() {
+        var p = $('#savedPill');
+        if (p) {
+          p.classList.add('show');
+          setTimeout(function () { p.classList.remove('show'); }, 1800);
+        }
+      }
+
+      function saveSettingsToStorage() {
+        try {
+          localStorage.setItem('novachat_settings', JSON.stringify(SETTINGS));
+          showAutoSaved();
+        } catch (e) {}
+      }
+
+      // تشغيل نغمة صوتية واقعية وجميلة بواسطة Web Audio API
+      function playNotificationChime() {
+        try {
+          if (!SETTINGS.notifications.sound) return;
+          var AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          var ctx = new AudioContext();
+          var osc = ctx.createOscillator();
+          var gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+          osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.14); // A5
+          gain.gain.setValueAtTime(0.18, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.36);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.38);
+        } catch (e) {}
       }
 
       /* =====================================================
-         الحالة
+         4. بطاقة المستخدم (User Card) وتحديث المظهر
          ===================================================== */
-      var state = { current: null, filter: '' };
+      function renderUserCardUI() {
+        var char = (ME.name || 'N').charAt(0).toUpperCase();
+        var displayName = ME.name || 'Nova_User';
+        var handle = '@' + (ME.username || displayName.toLowerCase());
+        var statusLabel = ME.customStatus ? ME.customStatus : (STATUS_NAMES[ME.status] || 'متصل');
 
-      function totalUnread() {
-        return USERS.reduce(function (n, u) { return n + u.unread; }, 0);
+        // تحديث عناصر البطاقة في الشريط الجانبي
+        $('#railAvatarChar').textContent = char;
+        $('#railName').textContent = displayName;
+        $('#railStatusText').textContent = statusLabel;
+
+        // تحديث نقطة الحالة
+        ['#railStatusDot', '#popoverStatusDot', '#topStatusDot'].forEach(function (sel) {
+          var dot = $(sel);
+          if (dot) {
+            dot.className = 'dot ' + ME.status;
+          }
+        });
+
+        // تحديث الأفاتار العلوي والشخصي
+        $('#topAvatarChar').textContent = char;
+        $('#popoverAvatarChar').textContent = char;
+        $('#popoverDisplayName').textContent = displayName;
+        $('#popoverUsername').textContent = handle;
+
+        // تحديث الحقول في الإعدادات
+        if ($('#accountDisplayNameInput')) $('#accountDisplayNameInput').value = displayName;
+        if ($('#accountUsernameInput')) $('#accountUsernameInput').value = ME.username;
+        if ($('#accountBioInput')) $('#accountBioInput').value = ME.bio;
+
+        // تحديث خيارات الحالة النشطة
+        $$('.status-opt').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.status === ME.status);
+        });
       }
+
+      function setMyStatus(newStatus, silent) {
+        ME.status = newStatus;
+        renderUserCardUI();
+        if (!silent) {
+          toast('تم تحديث حالتك إلى: ' + STATUS_NAMES[newStatus]);
+          showAutoSaved();
+        }
+      }
+
+      // القائمة المنبثقة لبطاقة المستخدم
+      var userCardBtn = $('#railUserCard');
+      var userPopover = $('#userPopover');
+
+      function toggleUserPopover(e) {
+        if (e) e.stopPropagation();
+        var isOpen = userPopover.classList.toggle('show');
+        userCardBtn.setAttribute('aria-expanded', isOpen);
+      }
+
+      function closeUserPopover() {
+        if (userPopover.classList.contains('show')) {
+          userPopover.classList.remove('show');
+          userCardBtn.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      userCardBtn.addEventListener('click', toggleUserPopover);
+      $('#topAvatar').addEventListener('click', toggleUserPopover);
+      userPopover.addEventListener('click', function (e) { e.stopPropagation(); });
+
+      // خيارات تغيير الحالة
+      $$('.status-opt').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          setMyStatus(btn.dataset.status);
+        });
+      });
+
+      // حفظ الحالة المخصصة
+      $('#saveCustomStatusBtn').addEventListener('click', function () {
+        var txt = $('#customStatusInput').value.trim();
+        ME.customStatus = txt;
+        renderUserCardUI();
+        toast(txt ? 'تم تعيين حالتك المخصصة: ' + txt : 'تم مسح الحالة المخصصة.');
+        $('#customStatusInput').value = '';
+      });
+
+      // نسخ اسم المستخدم
+      $('#copyUsernameBtn').addEventListener('click', function () {
+        var handle = '@' + ME.username;
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(handle).then(function () {
+            toast('تم نسخ اسم المستخدم: ' + handle + ' 📋');
+          }).catch(function () {
+            toast('تم نسخ اسم المستخدم: ' + handle);
+          });
+        } else {
+          toast('اسم المستخدم: ' + handle);
+        }
+      });
+
+      // روابط التنقل داخل الـ Popover
+      $('#popoverSettingsBtn').addEventListener('click', function () {
+        closeUserPopover();
+        openSettingsModal();
+      });
+
+      $('#popoverProfileBtn').addEventListener('click', function () {
+        closeUserPopover();
+        openSettingsModal('account');
+      });
+
+      var isMuted = false;
+      $('#popoverMuteBtn').addEventListener('click', function () {
+        isMuted = !isMuted;
+        SETTINGS.notifications.sound = !isMuted;
+        $('#popoverMuteText').textContent = isMuted ? 'إلغاء كتم التنبيهات' : 'كتم التنبيهات مؤقتاً';
+        toast(isMuted ? 'تم كتم التنبيهات مؤقتاً 🔕' : 'تم تفعيل التنبيهات 🔔');
+        saveSettingsToStorage();
+      });
+
+      $('#popoverHelpBtn').addEventListener('click', function () {
+        closeUserPopover();
+        openSettingsModal('about');
+      });
+
+      // زر تسجيل الخروج مع تأكيد سلس
+      function performLogout() {
+        if ($('#msgInput') && $('#msgInput').value.trim().length > 0) {
+          if (!confirm('لديك رسالة مكتوبة غير مرسلة، هل أنت متأكد من رغبتك بتسجيل الخروج؟')) return;
+        }
+
+        if (window.NovaAuth) {
+          window.NovaAuth.signOut();
+        } else {
+          try { localStorage.removeItem('novachat_user'); } catch (e) {}
+        }
+        toast('تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول…');
+        setTimeout(function () {
+          window.location.href = 'login.html?noload=1';
+        }, 800);
+      }
+
+      $('#popoverLogoutBtn').addEventListener('click', performLogout);
 
       /* =====================================================
-         العرض (Render)
+         5. السلوك التلقائي (Away بعد 10 دقائق من الخمول وفقدان النت)
          ===================================================== */
-      function renderMe() {
-        [$('#railAvatar'), $('#topAvatarEl')].forEach(function (n) {
-          n.textContent = ME.name.charAt(0).toUpperCase();
-        });
-        $('#railName').textContent = ME.name;
+      var idleTimer;
+      function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        if (ME.status === 'away' && ME._autoAway) {
+          ME._autoAway = false;
+          setMyStatus('online', true);
+        }
+        idleTimer = setTimeout(function () {
+          if (ME.status === 'online') {
+            ME._autoAway = true;
+            setMyStatus('away', true);
+            toast('تم تحويل حالتك تلقائياً إلى "بالخارج" بسبب الخمول.');
+          }
+        }, 10 * 60 * 1000); // 10 دقائق خمول
+      }
+      ['mousemove', 'keydown', 'mousedown', 'touchstart'].forEach(function (ev) {
+        window.addEventListener(ev, resetIdleTimer, { passive: true });
+      });
+      resetIdleTimer();
+
+      // تتبع الاتصال بالإنترنت
+      window.addEventListener('online', function () {
+        $('#offlineBadge').classList.remove('show');
+        setMyStatus('online', true);
+        toast('تمت استعادة الاتصال بالإنترنت ✅');
+      });
+      window.addEventListener('offline', function () {
+        $('#offlineBadge').classList.add('show');
+        setMyStatus('invisible', true);
+        toast('أنت الآن تعمل بدون اتصال بالإنترنت (Offline) ⚠️');
+      });
+
+      /* =====================================================
+         6. نافذة الإعدادات الشاملة (Settings Modal)
+         ===================================================== */
+      var settingsModal = $('#settingsModal');
+      function openSettingsModal(targetTab) {
+        settingsModal.classList.add('show');
+        if (targetTab) switchSettingsTab(targetTab);
+      }
+      function closeSettingsModal() {
+        settingsModal.classList.remove('show');
       }
 
-      function renderUnreadBadges() {
-        var total = totalUnread();
-        $$('[data-total-unread]').forEach(function (b) {
-          b.hidden = total === 0;
-          b.textContent = total > 9 ? '9+' : total;
+      $('#closeSettingsBtn').addEventListener('click', closeSettingsModal);
+      settingsModal.addEventListener('click', function (e) {
+        if (e.target === settingsModal) closeSettingsModal();
+      });
+
+      function switchSettingsTab(tabName) {
+        $$('.settings-tab-btn').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.stab === tabName);
         });
+        $$('.settings-panel').forEach(function (p) {
+          p.classList.toggle('active', p.id === 'stab-' + tabName);
+        });
+      }
+
+      $$('.settings-tab-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          switchSettingsTab(btn.dataset.stab);
+        });
+      });
+
+      // تطبيق إعدادات المظهر الفورية
+      function applyAppearanceSettings() {
+        document.body.dataset.fontSize = SETTINGS.appearance.fontSize;
+        document.body.dataset.glow = SETTINGS.appearance.glow;
+        document.body.dataset.reduceMotion = SETTINGS.appearance.reduceMotion ? 'true' : 'false';
+        document.body.dataset.highContrast = SETTINGS.appearance.highContrast ? 'true' : 'false';
+
+        // تطبيق اللغة واتجاه الصفحة
+        var isEn = SETTINGS.appearance.lang === 'en';
+        document.documentElement.lang = isEn ? 'en' : 'ar';
+        document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+        document.body.dir = isEn ? 'ltr' : 'rtl';
+
+        // تحديث أزرار الإعدادات لتطابق المحفوظ
+        $$('#langOptions .radio-pill').forEach(function (b) { b.classList.toggle('active', b.dataset.val === SETTINGS.appearance.lang); });
+        $$('#fontSizeOptions .radio-pill').forEach(function (b) { b.classList.toggle('active', b.dataset.val === SETTINGS.appearance.fontSize); });
+        $$('#glowOptions .radio-pill').forEach(function (b) { b.classList.toggle('active', b.dataset.val === SETTINGS.appearance.glow); });
+        $('#toggleReduceMotion').classList.toggle('on', !!SETTINGS.appearance.reduceMotion);
+        $('#toggleHighContrast').classList.toggle('on', !!SETTINGS.appearance.highContrast);
+
+        // إعدادات الإشعارات والمحادثات
+        $('#toggleMsgNotif').classList.toggle('on', !!SETTINGS.notifications.messages);
+        $('#toggleFriendNotif').classList.toggle('on', !!SETTINGS.notifications.friendRequests);
+        $('#toggleSoundNotif').classList.toggle('on', !!SETTINGS.notifications.sound);
+        $('#togglePreviewText').classList.toggle('on', !!SETTINGS.notifications.showPreview);
+        $('#toggleTypingIndicator').classList.toggle('on', !!SETTINGS.chats.typingIndicator);
+        $('#toggleLinkPreview').classList.toggle('on', !!SETTINGS.chats.linkPreview);
+        $('#toggleReadReceipts').classList.toggle('on', !!SETTINGS.privacy.readReceipts);
+      }
+
+      // تفاعل أزرار خيارات المظهر
+      $$('#langOptions .radio-pill').forEach(function (b) {
+        b.addEventListener('click', function () {
+          SETTINGS.appearance.lang = b.dataset.val;
+          applyAppearanceSettings();
+          saveSettingsToStorage();
+        });
+      });
+      $$('#fontSizeOptions .radio-pill').forEach(function (b) {
+        b.addEventListener('click', function () {
+          SETTINGS.appearance.fontSize = b.dataset.val;
+          applyAppearanceSettings();
+          saveSettingsToStorage();
+        });
+      });
+      $$('#glowOptions .radio-pill').forEach(function (b) {
+        b.addEventListener('click', function () {
+          SETTINGS.appearance.glow = b.dataset.val;
+          applyAppearanceSettings();
+          saveSettingsToStorage();
+        });
+      });
+      $('#toggleReduceMotion').addEventListener('click', function () {
+        SETTINGS.appearance.reduceMotion = !SETTINGS.appearance.reduceMotion;
+        applyAppearanceSettings();
+        saveSettingsToStorage();
+      });
+      $('#toggleHighContrast').addEventListener('click', function () {
+        SETTINGS.appearance.highContrast = !SETTINGS.appearance.highContrast;
+        applyAppearanceSettings();
+        saveSettingsToStorage();
+      });
+      $('#resetAppearanceBtn').addEventListener('click', function () {
+        SETTINGS.appearance = { lang: 'ar', fontSize: 'medium', glow: 'subtle', reduceMotion: false, highContrast: false };
+        applyAppearanceSettings();
+        saveSettingsToStorage();
+        toast('تمت إعادة ضبط المظهر للوضع الافتراضي');
+      });
+
+      // مفاتيح تبديل الإشعارات والمحادثات
+      $('#toggleMsgNotif').addEventListener('click', function () {
+        SETTINGS.notifications.messages = !SETTINGS.notifications.messages;
+        $('#toggleMsgNotif').classList.toggle('on', SETTINGS.notifications.messages);
+        saveSettingsToStorage();
+      });
+      $('#toggleFriendNotif').addEventListener('click', function () {
+        SETTINGS.notifications.friendRequests = !SETTINGS.notifications.friendRequests;
+        $('#toggleFriendNotif').classList.toggle('on', SETTINGS.notifications.friendRequests);
+        saveSettingsToStorage();
+      });
+      $('#toggleSoundNotif').addEventListener('click', function () {
+        SETTINGS.notifications.sound = !SETTINGS.notifications.sound;
+        $('#toggleSoundNotif').classList.toggle('on', SETTINGS.notifications.sound);
+        saveSettingsToStorage();
+      });
+      $('#testSoundBtn').addEventListener('click', playNotificationChime);
+
+      // فحص إذن إشعارات المتصفح
+      function updateBrowserNotifStatus() {
+        var el = $('#browserNotifStatus');
+        if (!('Notification' in window)) {
+          el.textContent = 'غير مدعوم بالمتصفح';
+        } else if (Notification.permission === 'granted') {
+          el.textContent = 'مسموح به ✓';
+          el.style.color = '#10b981';
+          el.style.borderColor = '#10b981';
+        } else if (Notification.permission === 'denied') {
+          el.textContent = 'محظور ✕';
+          el.style.color = '#ef4444';
+        } else {
+          el.textContent = 'لم يُطلب بعد';
+        }
+      }
+      updateBrowserNotifStatus();
+
+      $('#requestBrowserNotifBtn').addEventListener('click', function () {
+        if ('Notification' in window) {
+          Notification.requestPermission().then(function (perm) {
+            updateBrowserNotifStatus();
+            if (perm === 'granted') {
+              new Notification('NovaChat', { body: 'تم تفعيل إشعارات المتصفح بنجاح! 🚀' });
+            }
+          });
+        } else {
+          toast('المتصفح لا يدعم الإشعارات المنبثقة.');
+        }
+      });
+
+      $('#toggleTypingIndicator').addEventListener('click', function () {
+        SETTINGS.chats.typingIndicator = !SETTINGS.chats.typingIndicator;
+        $('#toggleTypingIndicator').classList.toggle('on', SETTINGS.chats.typingIndicator);
+        saveSettingsToStorage();
+      });
+      $('#toggleLinkPreview').addEventListener('click', function () {
+        SETTINGS.chats.linkPreview = !SETTINGS.chats.linkPreview;
+        $('#toggleLinkPreview').classList.toggle('on', SETTINGS.chats.linkPreview);
+        saveSettingsToStorage();
+      });
+      $('#toggleReadReceipts').addEventListener('click', function () {
+        SETTINGS.privacy.readReceipts = !SETTINGS.privacy.readReceipts;
+        $('#toggleReadReceipts').classList.toggle('on', SETTINGS.privacy.readReceipts);
+        saveSettingsToStorage();
+      });
+
+      // حفظ بيانات الحساب
+      $('#saveAccountBtn').addEventListener('click', function () {
+        var dName = $('#accountDisplayNameInput').value.trim();
+        var uName = $('#accountUsernameInput').value.trim().replace(/^@/, '');
+        var bio = $('#accountBioInput').value.trim();
+
+        if (dName) ME.name = dName;
+        if (uName) ME.username = uName;
+        ME.bio = bio;
+
+        try {
+          localStorage.setItem('novachat_user', JSON.stringify({
+            username: ME.name,
+            email: ME.username + '@novachat.local',
+            bio: ME.bio
+          }));
+        } catch (e) {}
+
+        renderUserCardUI();
+        toast('تم حفظ بيانات الحساب بنجاح ✅');
+        showAutoSaved();
+      });
+
+      // تنزيل بياناتي (Export JSON)
+      $('#downloadDataBtn').addEventListener('click', function () {
+        var exportObj = {
+          user: ME,
+          settings: SETTINGS,
+          conversations: USERS,
+          exportDate: new Date().toISOString()
+        };
+        var blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'novachat_backup_' + ME.username + '.json';
+        a.click();
+        toast('تم تنزيل ملف بياناتك بنجاح 📁');
+      });
+
+      // مسح سجل المحادثات
+      $('#clearChatHistoryBtn').addEventListener('click', function () {
+        if (confirm('هل أنت متأكد من مسح سجل الرسائل المحلية؟')) {
+          USERS.forEach(function (u) { u.msgs = []; });
+          $('#messages').textContent = '';
+          renderList();
+          toast('تم مسح سجل المحادثات.');
+        }
+      });
+
+      // فحص المايك ومؤشر الـ VU
+      var isTestingMic = false;
+      $('#testMicBtn').addEventListener('click', async function () {
+        var btn = $('#testMicBtn');
+        var bar = $('#audioVuBar');
+        if (!isTestingMic) {
+          try {
+            var stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            isTestingMic = true;
+            btn.textContent = 'إيقاف الفحص';
+            var aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            var src = aCtx.createMediaStreamSource(stream);
+            var analyser = aCtx.createAnalyser();
+            analyser.fftSize = 64;
+            src.connect(analyser);
+            var dataArr = new Uint8Array(analyser.frequencyBinCount);
+
+            function updateMeter() {
+              if (!isTestingMic) {
+                stream.getTracks().forEach(function (t) { t.stop(); });
+                bar.style.width = '0%';
+                return;
+              }
+              analyser.getByteFrequencyData(dataArr);
+              var sum = dataArr.reduce(function (a, b) { return a + b; }, 0);
+              var avg = sum / dataArr.length;
+              var pct = Math.min(100, Math.round((avg / 128) * 100));
+              bar.style.width = pct + '%';
+              requestAnimationFrame(updateMeter);
+            }
+            updateMeter();
+            toast('الميكروفون متصل ويعمل بشكل ممتاز 🎙️');
+          } catch (err) {
+            toast('تعذر الوصول إلى الميكروفون: ' + err.message);
+          }
+        } else {
+          isTestingMic = false;
+          btn.textContent = 'بدء فحص المايك';
+          bar.style.width = '0%';
+        }
+      });
+
+      /* =====================================================
+         7. صفحة وإدارة الأصدقاء الكاملة (Friends View)
+         ===================================================== */
+      var currentFriendTab = 'all';
+
+      function renderFriendsContent() {
+        var container = $('#friendsContent');
+        container.textContent = '';
+        var searchVal = ($('#friendsSearchInput').value || '').trim().toLowerCase();
+
+        // 1. تبويب إضافة صديق
+        if (currentFriendTab === 'add') {
+          var addPane = document.createElement('div');
+          addPane.className = 'add-friend-pane';
+          addPane.innerHTML = `
+            <div style="font-weight:700;font-size:16px;">إضافة صديق جديد</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.6;">
+              يمكنك إضافة صديق باستخدام اسم المستخدم الخاص به، أو إرسال رابط دعوتك الشخصي له.
+            </div>
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="addFriendUsernameInput" placeholder="@username" style="flex:1;height:42px;border-radius:12px;background:var(--bg);border:1px solid var(--line);padding:0 14px;outline:none;" />
+              <button type="button" class="btn btn-primary" id="sendFriendReqBtn">إرسال الطلب</button>
+            </div>
+            <div style="border-top:1px solid var(--line);padding-top:14px;margin-top:6px;">
+              <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">رابط دعوتك الشخصي:</div>
+              <div class="invite-link-box">
+                <span class="invite-link-text" id="inviteLinkUrl">https://novachat.app/invite/@${ME.username}</span>
+                <button type="button" class="btn btn-ghost" id="copyInviteLinkBtn" style="height:32px;font-size:11px;padding:0 10px;">
+                  <svg class="ic" style="width:14px;height:14px;"><use href="#i-copy"/></svg>
+                  نسخ الرابط
+                </button>
+              </div>
+            </div>
+          `;
+          container.appendChild(addPane);
+
+          $('#sendFriendReqBtn').addEventListener('click', function () {
+            var inp = $('#addFriendUsernameInput');
+            var val = inp.value.trim().replace(/^@/, '');
+            if (!val) return;
+            if (val === ME.username) {
+              toast('لا يمكنك إرسال طلب صداقة لنفسك!');
+              return;
+            }
+            PENDING_REQUESTS.push({
+              id: Date.now(),
+              name: val,
+              username: val,
+              type: 'outgoing',
+              time: 'الآن'
+            });
+            inp.value = '';
+            toast('تم إرسال طلب الصداقة إلى @' + val + ' بنجاح! 🚀');
+            updatePendingBadge();
+          });
+
+          $('#copyInviteLinkBtn').addEventListener('click', function () {
+            var url = 'https://novachat.app/invite/@' + ME.username;
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(url).then(function () {
+                toast('تم نسخ رابط الدعوة الشخصي بنجاح 📋');
+              });
+            } else {
+              toast('رابط الدعوة: ' + url);
+            }
+          });
+          return;
+        }
+
+        // 2. تبويب قيد الانتظار (Pending)
+        if (currentFriendTab === 'pending') {
+          if (!PENDING_REQUESTS.length) {
+            container.innerHTML = '<div class="empty-note">لا توجد طلبات صداقة معلقة حالياً.</div>';
+            return;
+          }
+          PENDING_REQUESTS.forEach(function (req) {
+            var card = document.createElement('div');
+            card.className = 'friend-card';
+            var isIncoming = req.type === 'incoming';
+            card.innerHTML = `
+              <div class="friend-info">
+                <div class="av" style="--s:42px;">${req.name.charAt(0).toUpperCase()}</div>
+                <div class="friend-details">
+                  <div class="friend-name">${req.name}</div>
+                  <div class="friend-sub">${isIncoming ? 'طلب صداقة وارد • ' + req.time : 'طلب مرسل منك • ' + req.time}</div>
+                </div>
+              </div>
+              <div class="friend-actions">
+                ${isIncoming ? `
+                  <button type="button" class="friend-action-btn accept" data-action="accept" data-id="${req.id}" title="قبول الطلب">
+                    <svg class="ic"><use href="#i-check"/></svg>
+                  </button>
+                  <button type="button" class="friend-action-btn reject" data-action="reject" data-id="${req.id}" title="رفض الطلب">
+                    <svg class="ic"><use href="#i-close"/></svg>
+                  </button>
+                ` : `
+                  <button type="button" class="btn btn-ghost" data-action="cancel" data-id="${req.id}" style="height:32px;font-size:12px;color:var(--muted);">
+                    إلغاء الطلب
+                  </button>
+                `}
+              </div>
+            `;
+            container.appendChild(card);
+          });
+
+          // تفعيل أزرار القبول والرفض والإلغاء
+          container.querySelectorAll('[data-action="accept"]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              var id = Number(b.dataset.id);
+              var req = PENDING_REQUESTS.find(function (r) { return r.id === id; });
+              if (req) {
+                USERS.push({ id: Date.now(), name: req.name, username: req.username, status: 'online', unread: 0, msgs: [] });
+                PENDING_REQUESTS = PENDING_REQUESTS.filter(function (r) { return r.id !== id; });
+                toast('تم قبول طلب الصداقة من ' + req.name + ' وأصبح في قائمة أصدقائك!');
+                updatePendingBadge();
+                renderFriendsContent();
+                renderList();
+              }
+            });
+          });
+
+          container.querySelectorAll('[data-action="reject"], [data-action="cancel"]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              var id = Number(b.dataset.id);
+              PENDING_REQUESTS = PENDING_REQUESTS.filter(function (r) { return r.id !== id; });
+              toast('تم إلغاء طلب الصداقة.');
+              updatePendingBadge();
+              renderFriendsContent();
+            });
+          });
+          return;
+        }
+
+        // 3. تبويب المحظورين (Blocked)
+        if (currentFriendTab === 'blocked') {
+          if (!BLOCKED_USERS.length) {
+            container.innerHTML = '<div class="empty-note">قائمة الحظر فارغة. لم تقم بحظر أي شخص.</div>';
+            return;
+          }
+          BLOCKED_USERS.forEach(function (u) {
+            var card = document.createElement('div');
+            card.className = 'friend-card';
+            card.innerHTML = `
+              <div class="friend-info">
+                <div class="av" style="--s:42px;">${u.name.charAt(0).toUpperCase()}</div>
+                <div class="friend-details">
+                  <div class="friend-name">${u.name}</div>
+                  <div class="friend-sub">@${u.username} • محظور</div>
+                </div>
+              </div>
+              <div class="friend-actions">
+                <button type="button" class="btn btn-ghost" data-unblock="${u.id}" style="height:32px;font-size:12px;">
+                  إلغاء الحظر
+                </button>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+
+          container.querySelectorAll('[data-unblock]').forEach(function (b) {
+            b.addEventListener('click', function () {
+              var id = Number(b.dataset.unblock);
+              BLOCKED_USERS = BLOCKED_USERS.filter(function (x) { return x.id !== id; });
+              toast('تم إلغاء الحظر بنجاح.');
+              renderFriendsContent();
+            });
+          });
+          return;
+        }
+
+        // 4. تبويب الكل والمتصلون (All & Online)
+        var list = USERS.filter(function (u) {
+          if (currentFriendTab === 'online' && u.status !== 'online') return false;
+          if (searchVal && !u.name.toLowerCase().includes(searchVal) && !(u.username || '').toLowerCase().includes(searchVal)) return false;
+          return true;
+        });
+
+        if (!list.length) {
+          container.innerHTML = '<div class="empty-note">لا يوجد أصدقاء يطابقون البحث.</div>';
+          return;
+        }
+
+        list.forEach(function (u) {
+          var card = document.createElement('div');
+          card.className = 'friend-card';
+          var isOnline = u.status === 'online';
+          card.innerHTML = `
+            <div class="friend-info">
+              <div class="av" style="--s:42px;">
+                ${u.name.charAt(0).toUpperCase()}
+                <span class="dot ${u.status}"></span>
+              </div>
+              <div class="friend-details">
+                <div class="friend-name">${u.name}</div>
+                <div class="friend-sub ${isOnline ? 'online' : ''}">${STATUS_NAMES[u.status] || u.status} • @${u.username || u.name.toLowerCase()}</div>
+              </div>
+            </div>
+            <div class="friend-actions">
+              <button type="button" class="friend-action-btn" data-chat="${u.id}" title="بدء محادثة">
+                <svg class="ic"><use href="#i-chat"/></svg>
+              </button>
+              <button type="button" class="friend-action-btn" data-call="${u.id}" title="مكالمة صوتية">
+                <svg class="ic"><use href="#i-phone"/></svg>
+              </button>
+              <button type="button" class="friend-action-btn" data-more="${u.id}" title="خيارات إضافية">
+                <svg class="ic"><use href="#i-dots"/></svg>
+              </button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+        // تشغيل أزرار التفاعل
+        container.querySelectorAll('[data-chat]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = Number(b.dataset.chat);
+            openChat(id);
+          });
+        });
+        container.querySelectorAll('[data-call]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            toast('ميزة المكالمات الصوتية قيد التجهيز مع WebRTC 🎙️');
+          });
+        });
+        container.querySelectorAll('[data-more]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            var id = Number(b.dataset.more);
+            var friend = USERS.find(function (x) { return x.id === id; });
+            if (!friend) return;
+            var action = prompt('خيارات الصديق: اكتب "حظر" لحظر المستخدم، أو "حذف" لإزالته من الأصدقاء:');
+            if (action === 'حظر') {
+              BLOCKED_USERS.push({ id: friend.id, name: friend.name, username: friend.username });
+              USERS = USERS.filter(function (x) { return x.id !== id; });
+              toast('تم حظر ' + friend.name);
+              renderFriendsContent();
+              renderList();
+            } else if (action === 'حذف') {
+              USERS = USERS.filter(function (x) { return x.id !== id; });
+              toast('تم حذف ' + friend.name + ' من قائمة الأصدقاء');
+              renderFriendsContent();
+              renderList();
+            }
+          });
+        });
+      }
+
+      function updatePendingBadge() {
+        var badge = $('#pendingCountBadge');
+        if (badge) {
+          badge.textContent = PENDING_REQUESTS.length;
+          badge.hidden = PENDING_REQUESTS.length === 0;
+        }
+      }
+
+      $$('.ftab-btn').forEach(function (b) {
+        b.addEventListener('click', function () {
+          $$('.ftab-btn').forEach(function (x) { x.classList.remove('active'); });
+          b.classList.add('active');
+          currentFriendTab = b.dataset.ftab;
+          renderFriendsContent();
+        });
+      });
+
+      $('#friendsSearchInput').addEventListener('input', renderFriendsContent);
+
+      /* =====================================================
+         8. المحادثات والدردشة (Chat Logic)
+         ===================================================== */
+      var state = { current: null };
+
+      function avatar(name, size, status) {
+        var a = document.createElement('span');
+        a.className = 'av';
+        a.style.setProperty('--s', size + 'px');
+        a.textContent = name.charAt(0).toUpperCase();
+        if (status) {
+          var d = document.createElement('span');
+          d.className = 'dot ' + status;
+          a.appendChild(d);
+        }
+        return a;
       }
 
       function lastLine(u) {
-        if (!u.msgs.length) return STATUS_LABEL[u.status];
-        return u.msgs[u.msgs.length - 1][1];
+        if (!u.msgs.length) return 'لا توجد رسائل بعد';
+        var last = u.msgs[u.msgs.length - 1];
+        return (last[0] === 'out' ? 'أنت: ' : '') + last[1];
       }
 
       function renderList() {
         var list = $('#chatList');
         list.textContent = '';
-        var q = state.filter.trim().toLowerCase();
-        var items = USERS.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) !== -1; });
+        var items = USERS;
 
-        $('#chatCount').textContent = USERS.length;
-
-        if (!items.length) {
-          var note = el('div', 'empty-note', 'ما لقينا مستخدم بهذا الاسم.');
-          var b = el('button', 'btn btn-ghost', 'إضافة صديق');
-          b.style.marginTop = '12px';
-          b.setAttribute('data-open-add', '');
-          b.addEventListener('click', openAdd);
-          note.appendChild(document.createElement('br'));
-          note.appendChild(b);
-          list.appendChild(note);
-          return;
-        }
+        $('#chatCount').textContent = items.length;
 
         items.forEach(function (u) {
-          var row = el('button', 'row' + (state.current === u.id ? ' active' : ''));
+          var row = document.createElement('button');
+          row.className = 'row' + (state.current === u.id ? ' active' : '');
           row.type = 'button';
           row.appendChild(avatar(u.name, 42, u.status));
 
-          var meta = el('div', 'meta');
-          meta.appendChild(el('div', 'name', u.name));
-          meta.appendChild(el('div', 'sub' + (u.msgs.length ? '' : (u.status === 'online' ? ' online' : '')), lastLine(u)));
+          var meta = document.createElement('div');
+          meta.className = 'meta';
+          var nameEl = document.createElement('div');
+          nameEl.className = 'name';
+          nameEl.textContent = u.name;
+          meta.appendChild(nameEl);
+
+          var subEl = document.createElement('div');
+          subEl.className = 'sub' + (u.status === 'online' ? ' online' : '');
+          subEl.textContent = lastLine(u);
+          meta.appendChild(subEl);
           row.appendChild(meta);
 
-          if (u.unread > 0) row.appendChild(el('span', 'unread', u.unread));
+          if (u.unread > 0) {
+            var un = document.createElement('span');
+            un.className = 'unread';
+            un.textContent = u.unread;
+            row.appendChild(un);
+          }
+
           row.addEventListener('click', function () { openChat(u.id); });
           list.appendChild(row);
         });
@@ -782,88 +2298,73 @@
         var online = USERS.filter(function (u) { return u.status === 'online'; });
         $('#onlineCount').textContent = online.length;
 
-        if (!online.length) {
-          list.appendChild(el('div', 'empty-note', 'ما في أصدقاء متصلين حاليًا.'));
-          return;
-        }
-
         online.forEach(function (u) {
-          var row = el('div', 'row');
+          var row = document.createElement('div');
+          row.className = 'row';
           row.appendChild(avatar(u.name, 40, 'online'));
 
-          var meta = el('div', 'meta');
-          meta.appendChild(el('div', 'name', u.name));
-          meta.appendChild(el('div', 'sub online', 'Online'));
+          var meta = document.createElement('div');
+          meta.className = 'meta';
+          var nameEl = document.createElement('div');
+          nameEl.className = 'name';
+          nameEl.textContent = u.name;
+          meta.appendChild(nameEl);
           row.appendChild(meta);
 
-          var actions = el('div', 'actions');
-          var chat = el('button', 'icon-btn'); chat.type = 'button'; chat.setAttribute('aria-label', 'محادثة مع ' + u.name);
-          chat.appendChild(icon('i-chat'));
-          chat.addEventListener('click', function () { closeDrawer(); openChat(u.id); });
+          var chatBtn = document.createElement('button');
+          chatBtn.className = 'icon-btn';
+          chatBtn.innerHTML = '<svg class="ic"><use href="#i-chat"/></svg>';
+          chatBtn.addEventListener('click', function () { openChat(u.id); });
+          row.appendChild(chatBtn);
 
-          var call = el('button', 'icon-btn'); call.type = 'button'; call.setAttribute('aria-label', 'مكالمة مع ' + u.name);
-          call.appendChild(icon('i-phone'));
-          call.addEventListener('click', function () { toast('المكالمات قادمة قريبًا'); });
-
-          actions.appendChild(chat); actions.appendChild(call);
-          row.appendChild(actions);
           list.appendChild(row);
         });
       }
 
-      function renderNotifs() {
-        var box = $('#notifList');
-        box.textContent = '';
-        NOTIFS.forEach(function (n) {
-          var d = el('div', 'notif', n.text);
-          d.appendChild(el('small', '', n.time));
-          box.appendChild(d);
-        });
-      }
-
-      /* =====================================================
-         المحادثة
-         ===================================================== */
-      function addMessage(kind, text, time) {
-        var m = el('div', 'msg ' + kind, text);
-        m.appendChild(el('span', 'time', time));
-        var box = $('#messages');
-        box.appendChild(m);
-        box.scrollTop = box.scrollHeight;
+      function addMessage(dir, text, time) {
+        var wrap = $('#messages');
+        var m = document.createElement('div');
+        m.className = 'msg ' + dir;
+        m.textContent = text;
+        var t = document.createElement('span');
+        t.className = 'time';
+        t.textContent = time;
+        m.appendChild(t);
+        wrap.appendChild(m);
+        wrap.scrollTop = wrap.scrollHeight;
       }
 
       function openChat(id) {
-        var u = USERS.filter(function (x) { return x.id === id; })[0];
-        if (!u) return;
-        u.unread = 0;
         state.current = id;
+        var u = USERS.find(function (x) { return x.id === id; });
+        if (!u) return;
 
-        var head = $('#chatAvatar');
-        head.textContent = u.name.charAt(0).toUpperCase();
-        head.appendChild(el('span', 'dot ' + u.status));
+        u.unread = 0;
         $('#chatName').textContent = u.name;
-        var st = $('#chatStatus');
-        st.textContent = STATUS_LABEL[u.status];
-        st.className = 'sub' + (u.status === 'online' ? ' online' : '');
+        $('#chatStatus').textContent = STATUS_NAMES[u.status] || u.status;
+        $('#chatAvatar').textContent = '';
+        $('#chatAvatar').appendChild(avatar(u.name, 40, u.status));
 
         $('#messages').textContent = '';
         if (!u.msgs.length) {
-          $('#messages').appendChild(el('div', 'empty-note', 'ابدأ المحادثة مع ' + u.name + ' 👋'));
+          var note = document.createElement('div');
+          note.className = 'empty-note';
+          note.textContent = 'ابدأ المحادثة مع ' + u.name + ' 👋';
+          $('#messages').appendChild(note);
         } else {
           u.msgs.forEach(function (m) { addMessage(m[0], m[1], m[2]); });
         }
 
         $('#main').dataset.state = 'chat';
-        setActive('messages');
-        if (isMobile.matches) document.body.dataset.view = 'chat';
-        renderList(); renderUnreadBadges();
-        if (!isMobile.matches) $('#msgInput').focus();
+        setActiveNav('messages');
+        renderList();
+        renderUnreadBadges();
+        $('#msgInput').focus();
       }
 
       function closeChat() {
         state.current = null;
         $('#main').dataset.state = 'welcome';
-        document.body.dataset.view = isMobile.matches ? 'messages' : 'home';
         renderList();
       }
 
@@ -873,134 +2374,84 @@
         var text = input.value.trim();
         if (!text || state.current === null) return;
 
-        var u = USERS.filter(function (x) { return x.id === state.current; })[0];
-        var time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        var u = USERS.find(function (x) { return x.id === state.current; });
+        var time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
 
         if (!u.msgs.length) $('#messages').textContent = '';
         u.msgs.push(['out', text, time]);
         addMessage('out', text, time);
         input.value = '';
         renderList();
+
+        // محاكاة رد الطرف الآخر بعد ثانية مع صوت الإشعار
+        setTimeout(function () {
+          if (state.current === u.id) {
+            var botReply = 'وصلت رسالتك تمام! 👍';
+            u.msgs.push(['in', botReply, time]);
+            addMessage('in', botReply, time);
+            playNotificationChime();
+            renderList();
+          }
+        }, 1200);
       });
 
       $('#backBtn').addEventListener('click', closeChat);
 
       /* =====================================================
-         التنقل
+         9. التنقل وأزرار النافبار
          ===================================================== */
-      function setActive(name) {
-        $$('[data-nav]').forEach(function (b) { b.classList.toggle('active', b.dataset.nav === name); });
-      }
-
-      function openDrawer() {
-        $('#onlinePanel').classList.add('open');
-        if (!isMobile.matches) $('#scrim').classList.add('show');
-      }
-      function closeDrawer() {
-        $('#onlinePanel').classList.remove('open');
-        $('#scrim').classList.remove('show');
-      }
-
-      function focusSearch() {
-        if (isMobile.matches) document.body.dataset.view = 'messages';
-        setTimeout(function () { $('#listSearch').focus(); }, 50);
-      }
-
-      function handleNav(name) {
-        if (name === 'home') {
-          closeDrawer(); closeChat(); setActive('home');
-          document.body.dataset.view = 'home';
-          if (state.current === null) $('#main').dataset.state = 'welcome';
-        } else if (name === 'messages') {
-          closeDrawer(); setActive('messages'); focusSearch();
-        } else if (name === 'friends') {
-          setActive('friends');
-          if (isDrawer.matches) { openDrawer(); }
-          else {
-            var p = $('#onlinePanel');
-            p.classList.add('pulse');
-            setTimeout(function () { p.classList.remove('pulse'); }, 900);
-          }
-        } else if (name === 'calls') {
-          toast('المكالمات قادمة قريبًا');
-        } else if (name === 'settings') {
-          toast('الإعدادات قادمة قريبًا');
-        }
-      }
-
-      $$('[data-nav]').forEach(function (b) {
-        b.addEventListener('click', function () { handleNav(b.dataset.nav); });
-      });
-
-      $('#drawerClose').addEventListener('click', closeDrawer);
-      $('#scrim').addEventListener('click', closeDrawer);
-      $('#topSearch').addEventListener('click', focusSearch);
-      $('#startChat').addEventListener('click', function () { setActive('messages'); focusSearch(); });
-      $('#listSearch').addEventListener('input', function (e) {
-        state.filter = e.target.value;
-        renderList();
-      });
-
-      /* ---- الإشعارات ---- */
-      var bell = $('#bellBtn'), menu = $('#notifMenu');
-      function closeMenu() { menu.classList.remove('show'); bell.setAttribute('aria-expanded', 'false'); }
-      bell.addEventListener('click', function (e) {
-        e.stopPropagation();
-        closeUserMenu();
-        var open = menu.classList.toggle('show');
-        bell.setAttribute('aria-expanded', open);
-      });
-      menu.addEventListener('click', function (e) { e.stopPropagation(); });
-      document.addEventListener('click', closeMenu);
-      $('#markRead').addEventListener('click', function () { $('#bellDot').hidden = true; closeMenu(); });
-
-      /* ---- قائمة المستخدم وتسجيل الخروج ---- */
-      var userMenu = $('#userMenu');
-      function closeUserMenu() {
-        if (userMenu) userMenu.classList.remove('show');
-      }
-
-      function toggleUserMenu(e) {
-        e.stopPropagation();
-        closeMenu();
-        if (userMenu) {
-          userMenu.classList.toggle('show');
-          var titleEl = $('#userMenuName');
-          if (titleEl) titleEl.textContent = ME.name;
-        }
-      }
-
-      $('#topAvatar').addEventListener('click', toggleUserMenu);
-      var railUser = $('.rail-user');
-      if (railUser) {
-        railUser.style.cursor = 'pointer';
-        railUser.title = 'حسابي وتسجيل الخروج';
-        railUser.addEventListener('click', toggleUserMenu);
-      }
-
-      if (userMenu) userMenu.addEventListener('click', function (e) { e.stopPropagation(); });
-      document.addEventListener('click', closeUserMenu);
-
-      var logoutBtn = $('#logoutBtn');
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', async function () {
-          if (window.NovaAuth) {
-            await window.NovaAuth.signOut();
-          } else {
-            try {
-              localStorage.removeItem('novachat_user');
-            } catch(e) {}
-          }
-          toast('تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول...');
-          setTimeout(function () {
-            window.location.href = 'login.html?noload=1';
-          }, 600);
+      function setActiveNav(name) {
+        $$('[data-nav]').forEach(function (b) {
+          b.classList.toggle('active', b.dataset.nav === name);
         });
       }
 
-      /* ---- نافذة إضافة صديق ---- */
-      var modal = $('#addModal'), addInput = $('#addInput'), addErr = $('#addErr');
+      function handleNav(name) {
+        setActiveNav(name);
+        closeUserPopover();
 
+        if (name === 'home') {
+          closeChat();
+          $('#main').dataset.state = 'welcome';
+        } else if (name === 'friends') {
+          closeChat();
+          $('#main').dataset.state = 'friends';
+          renderFriendsContent();
+        } else if (name === 'messages') {
+          if (state.current) {
+            $('#main').dataset.state = 'chat';
+          } else {
+            $('#listSearch').focus();
+          }
+        } else if (name === 'calls') {
+          toast('المكالمات الصوتية والمرئية قادمة قريباً عبر WebRTC 📞');
+        } else if (name === 'settings') {
+          openSettingsModal();
+        }
+      }
+
+      $$('[data-nav]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          handleNav(btn.dataset.nav);
+        });
+      });
+
+      function totalUnread() {
+        return USERS.reduce(function (sum, u) { return sum + u.unread; }, 0);
+      }
+
+      function renderUnreadBadges() {
+        var tot = totalUnread();
+        $$('[data-total-unread]').forEach(function (b) {
+          b.hidden = tot === 0;
+          b.textContent = tot > 9 ? '9+' : tot;
+        });
+      }
+
+      /* =====================================================
+         10. النوافذ المنبثقة والإغلاق بزر Esc
+         ===================================================== */
+      var modal = $('#addModal'), addInput = $('#addInput'), addErr = $('#addErr');
       function openAdd() {
         modal.classList.add('show');
         addInput.value = ''; addErr.textContent = '';
@@ -1016,25 +2467,65 @@
         e.preventDefault();
         var name = addInput.value.trim().replace(/^@/, '');
         if (!/^[A-Za-z0-9_.]{3,20}$/.test(name)) {
-          addErr.textContent = 'اسم مستخدم غير صحيح (3–20 خانة: حروف إنجليزية وأرقام و _ .)';
+          addErr.textContent = 'اسم غير صحيح (3–20 خانة: حروف إنجليزية وأرقام و _)';
           return;
         }
         closeAdd();
-        toast('تم إرسال طلب الصداقة إلى @' + name + ' (تجريبي)');
+        PENDING_REQUESTS.push({ id: Date.now(), name: name, username: name, type: 'outgoing', time: 'الآن' });
+        updatePendingBadge();
+        toast('تم إرسال طلب الصداقة إلى @' + name + ' بنجاح! 🚀');
+      });
+
+      // إغلاق أي نافذة أو قائمة عند الضغط بالخارج أو مفتاح Esc
+      document.addEventListener('click', function () {
+        closeUserPopover();
+        $('#notifMenu').classList.remove('show');
       });
 
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') { closeAdd(); closeMenu(); closeDrawer(); closeUserMenu(); }
+        if (e.key === 'Escape') {
+          closeUserPopover();
+          closeSettingsModal();
+          closeAdd();
+          $('#notifMenu').classList.remove('show');
+        }
       });
 
+      // قائمة الإشعارات في الشريط العلوي
+      $('#bellBtn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeUserPopover();
+        $('#notifMenu').classList.toggle('show');
+      });
+      $('#markRead').addEventListener('click', function () {
+        $('#bellDot').hidden = true;
+        $('#notifMenu').classList.remove('show');
+        toast('تم تعليم كافة الإشعارات كمقروءة');
+      });
+
+      function renderNotifs() {
+        var list = $('#notifList');
+        list.textContent = '';
+        NOTIFS.forEach(function (n) {
+          var it = document.createElement('div');
+          it.style.padding = '10px 14px';
+          it.style.borderBottom = '1px solid var(--line)';
+          it.innerHTML = `<div style="font-size:12.5px;">${n.text}</div><div style="font-size:10.5px;color:var(--muted);margin-top:2px;">${n.time}</div>`;
+          list.appendChild(it);
+        });
+      }
+
       /* =====================================================
-         تشغيل
+         11. التشغيل والتهيئة المبدئية
          ===================================================== */
-      renderMe();
+      applyAppearanceSettings();
+      renderUserCardUI();
       renderList();
       renderOnline();
       renderNotifs();
       renderUnreadBadges();
+      updatePendingBadge();
+
     })();
   </script>
 </body>
