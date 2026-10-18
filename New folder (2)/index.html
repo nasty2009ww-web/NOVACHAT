@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <title>NovaChat | شاشة التحميل</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="splash" role="status" aria-live="polite" aria-label="Loading NovaChat">
+    <!-- شعار N المرسوم برمز فكتور SVG متوهج -->
+    <svg class="logo-n" viewBox="0 0 100 120" aria-hidden="true">
+      <path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z" />
+    </svg>
+
+    <h1 class="wordmark">NovaChat</h1>
+
+    <div class="loader">
+      <div class="bar">
+        <div class="bar-fill" id="barFill"></div>
+      </div>
+      <div class="percent" id="percent">0%</div>
+      <div class="status-text" id="statusText">جاري تهيئة النظام...</div>
+      <div class="skip-hint" id="skipHint">انقر هنا أو اضغط أي زر للتخطي سريعاً</div>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      var NEXT_PAGE = "login.html";
+      try {
+        if (localStorage.getItem("novachat_user")) {
+          NEXT_PAGE = "home.html";
+        }
+      } catch (e) {}
+      var DURATION = 2600;  // مدة التحميل بالملي ثانية
+      var EXIT_DELAY = 300; // انتظار بسيط عند 100% قبل الانتقال
+
+      var fill = document.getElementById("barFill");
+      var percentEl = document.getElementById("percent");
+      var statusEl = document.getElementById("statusText");
+      var skipHint = document.getElementById("skipHint");
+
+      var start = null;
+      var isFinished = false;
+
+      // لو الصفحة مفتوحة مع رابط إعادة التحميل، بنمسح علامة التحميل القديمة
+      try {
+        if (window.location.search.indexOf("reload") !== -1) {
+          sessionStorage.removeItem("novachat_loaded");
+        }
+      } catch (e) {}
+
+      // نصوص حالة التحميل بتطور النسبة
+      function updateStatus(val) {
+        if (val < 25) {
+          statusEl.textContent = "جاري تهيئة النظام...";
+        } else if (val < 65) {
+          statusEl.textContent = "تحميل واجهة وبيانات NovaChat...";
+        } else if (val < 95) {
+          statusEl.textContent = "تجهيز شاشة تسجيل الدخول...";
+        } else {
+          statusEl.textContent = "مرحباً بك! جاري الانتقال...";
+        }
+      }
+
+      function finishLoading() {
+        if (isFinished) return;
+        isFinished = true;
+
+        fill.style.width = "100%";
+        percentEl.textContent = "100%";
+        updateStatus(100);
+
+        try {
+          sessionStorage.setItem("novachat_loaded", "true");
+        } catch (e) {}
+
+        setTimeout(function () {
+          document.body.classList.add("leaving");
+          setTimeout(function () {
+            window.location.href = NEXT_PAGE;
+          }, 450);
+        }, EXIT_DELAY);
+      }
+
+      function ease(t) {
+        return 1 - Math.pow(1 - t, 2.2);
+      }
+
+      function tick(ts) {
+        if (isFinished) return;
+        if (start === null) start = ts;
+        var t = Math.min((ts - start) / DURATION, 1);
+        var value = Math.round(ease(t) * 100);
+
+        fill.style.width = value + "%";
+        percentEl.textContent = value + "%";
+        updateStatus(value);
+
+        if (t < 1) {
+          requestAnimationFrame(tick);
+        } else {
+          finishLoading();
+        }
+      }
+
+      requestAnimationFrame(tick);
+
+      // إمكانية التخطي الفوري عند النقر في أي مكان أو الضغط على زر
+      document.addEventListener("click", finishLoading);
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+          finishLoading();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

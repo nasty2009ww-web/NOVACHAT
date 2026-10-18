@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <title>الرئيسية | NovaChat</title>
+  <script>
+    // التأكد من ظهور شاشة التحميل أولاً
+    try {
+      var isLoaded = sessionStorage.getItem("novachat_loaded");
+      var forceNoLoad = window.location.search.indexOf("noload") !== -1;
+      if (!isLoaded && !forceNoLoad) {
+        window.location.replace("index.html");
+      }
+    } catch (e) {}
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
+
+    /* =========================================================
+       NOVACHAT — home.html
+       1) Tokens  2) Base  3) Layout  4) Components  5) Responsive
+       ========================================================= */
+
+    /* 1) Tokens */
+    :root {
+      --bg: #050508;
+      --panel: #0a0a0f;
+      --card: #101017;
+      --line: rgba(255, 255, 255, 0.07);
+      --line-strong: rgba(255, 255, 255, 0.12);
+      --text: #f2f2f5;
+      --muted: rgba(255, 255, 255, 0.55);
+      --fuchsia: #e6007e;
+      --fuchsia-light: #ff3fa4;
+      --fuchsia-bg: rgba(230, 0, 126, 0.10);
+      --fuchsia-glow: rgba(230, 0, 126, 0.40);
+      --radius: 14px;
+      --topbar-h: 60px;
+      --nav-h: 64px;
+      --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    /* 2) Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body { height: 100%; background: var(--bg); overflow: hidden; }
+
+    body {
+      font-family: 'Cairo', "Segoe UI", Tahoma, system-ui, -apple-system, Roboto, Arial, sans-serif;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      font-size: 14px;
+    }
+
+    button { font-family: inherit; color: inherit; cursor: pointer; background: none; border: none; }
+    input { font-family: inherit; color: inherit; }
+    :focus-visible { outline: 2px solid var(--fuchsia); outline-offset: 2px; }
+
+    .ic {
+      width: 22px; height: 22px; flex-shrink: 0;
+      fill: none; stroke: currentColor; stroke-width: 1.8;
+      stroke-linecap: round; stroke-linejoin: round;
+    }
+    .logo { fill: var(--fuchsia); stroke: none; }
+
+    /* 3) Layout */
+    .app {
+      height: 100vh; height: 100dvh;
+      display: grid;
+      grid-template-rows: var(--topbar-h) minmax(0, 1fr);
+      direction: ltr; /* الشريط الجانبي يسار، واللوحة يمين، بغض النظر عن RTL */
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 8, 12, 0.85);
+      backdrop-filter: blur(12px);
+      position: relative; z-index: 20;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; direction: ltr; }
+    .brand .logo { width: 20px; height: 24px; filter: drop-shadow(0 0 6px var(--fuchsia-glow)); }
+    .brand-name {
+      color: var(--fuchsia); font-weight: 300; font-size: 15px;
+      letter-spacing: 0.38em; text-transform: uppercase;
+    }
+
+    .top-actions { display: flex; align-items: center; gap: 6px; position: relative; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: 84px 300px minmax(0, 1fr) 290px;
+      min-height: 0;
+    }
+    .shell > * { direction: rtl; min-height: 0; }
+
+    /* 4) Components */
+
+    /* ---- Icon buttons ---- */
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: grid; place-items: center; color: var(--muted);
+      position: relative;
+      transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
+    }
+    .icon-btn:hover { color: var(--fuchsia-light); background: var(--fuchsia-bg); }
+    .icon-btn:active { transform: scale(0.94); }
+    .icon-btn .badge-dot {
+      position: absolute; top: 9px; right: 10px; width: 8px; height: 8px;
+      border-radius: 50%; background: var(--fuchsia);
+      box-shadow: 0 0 8px var(--fuchsia); border: 2px solid var(--bg);
+    }
+    .icon-btn .badge-dot[hidden] { display: none; }
+
+    /* ---- Rail (الشريط الجانبي) ---- */
+    .rail {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 14px 0; gap: 6px;
+      background: var(--panel); border-right: 1px solid var(--line);
+    }
+    .rail .logo { width: 28px; height: 34px; margin: 2px 0 14px; filter: drop-shadow(0 0 8px var(--fuchsia-glow)); }
+
+    .nav-btn {
+      width: 66px; padding: 9px 0 7px; border-radius: 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-size: 10.5px; color: var(--muted); position: relative;
+      transition: color 0.2s, background 0.2s, transform 0.2s var(--ease);
+    }
+    .nav-btn:hover { color: var(--text); background: rgba(255, 255, 255, 0.04); transform: translateY(-1px); }
+    .nav-btn.active { color: var(--fuchsia-light); background: var(--fuchsia-bg); }
+    .nav-btn.active::before {
+      content: ""; position: absolute; left: -9px; top: 14px; bottom: 14px; width: 3px;
+      border-radius: 0 3px 3px 0; background: var(--fuchsia); box-shadow: 0 0 10px var(--fuchsia);
+    }
+    .nav-btn .count {
+      position: absolute; top: 4px; right: 12px; min-width: 17px; height: 17px; padding: 0 5px;
+      border-radius: 999px; background: var(--fuchsia); color: #fff; font-size: 10px; font-weight: 700;
+      display: grid; place-items: center;
+    }
+    .nav-btn .count[hidden] { display: none; }
+
+    .rail-sep { width: 32px; height: 1px; background: var(--line); margin: 8px 0; }
+
+    .add-server {
+      width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center;
+      color: var(--fuchsia-light); border: 1px dashed rgba(230, 0, 126, 0.5);
+      transition: background 0.2s, box-shadow 0.2s, transform 0.2s var(--ease);
+    }
+    .add-server:hover { background: var(--fuchsia-bg); box-shadow: 0 0 16px rgba(230, 0, 126, 0.25); transform: rotate(90deg); }
+
+    .rail-user {
+      margin-top: auto; width: 72px; padding: 10px 4px 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      border-radius: 14px; background: var(--card); border: 1px solid var(--line);
+    }
+    .rail-user .u-name { font-size: 11px; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: ltr; }
+    .rail-user .u-status { font-size: 10px; color: var(--fuchsia-light); direction: ltr; }
+
+    /* ---- Avatar + status dot ---- */
+    .av {
+      --s: 42px; position: relative; width: var(--s); height: var(--s); border-radius: 50%; flex-shrink: 0;
+      display: grid; place-items: center;
+      font-weight: 600; font-size: calc(var(--s) * 0.38); color: #ffb3da; direction: ltr;
+      background: linear-gradient(135deg, #2b0f20, #130810);
+      border: 1px solid rgba(230, 0, 126, 0.35);
+    }
+    .dot {
+      position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%;
+      border: 2px solid var(--panel); background: #46464f;
+    }
+    .dot.online { background: var(--fuchsia); box-shadow: 0 0 8px var(--fuchsia); }
+    .dot.away { background: #7a3d63; }
+
+    /* ---- List panel (المحادثات) ---- */
+    .list {
+      display: flex; flex-direction: column; background: var(--bg);
+      border-right: 1px solid var(--line); min-width: 0;
+    }
+    .panel-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 16px 10px;
+    }
+    .panel-head h2 { font-size: 16px; font-weight: 600; }
+    .panel-head .count-pill {
+      font-size: 11px; color: var(--muted); border: 1px solid var(--line-strong);
+      border-radius: 999px; padding: 2px 9px;
+    }
+
+    .search-box { position: relative; padding: 0 16px 10px; }
+    .search-box .ic { position: absolute; top: 12px; inset-inline-start: 28px; width: 18px; height: 18px; color: var(--muted); }
+    .search-box input {
+      width: 100%; height: 42px; border-radius: 12px; padding: 0 14px; padding-inline-start: 40px;
+      background: var(--card); border: 1px solid var(--line); outline: none; font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .search-box input::placeholder { color: rgba(255, 255, 255, 0.3); }
+    .search-box input:focus { border-color: var(--fuchsia); box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.15); }
+
+    .btn {
+      height: 42px; border-radius: 12px; padding: 0 18px; font-weight: 600; font-size: 14px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      transition: transform 0.2s var(--ease), box-shadow 0.2s, background 0.2s, border-color 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { color: #fff; background: linear-gradient(90deg, #b8005f, var(--fuchsia)); box-shadow: 0 0 16px rgba(230, 0, 126, 0.3); }
+    .btn-primary:hover { box-shadow: 0 0 26px rgba(230, 0, 126, 0.5); transform: translateY(-1px); }
+    .btn-ghost { border: 1px solid var(--line-strong); background: var(--card); }
+    .btn-ghost:hover { border-color: var(--fuchsia); box-shadow: 0 0 14px rgba(230, 0, 126, 0.2); transform: translateY(-1px); }
+    .btn .ic { width: 18px; height: 18px; }
+
+    .list .add-friend { margin: 0 16px 10px; }
+
+    .section-label { padding: 8px 18px 6px; font-size: 11px; letter-spacing: 0.08em; color: var(--muted); }
+
+    .scroll { overflow-y: auto; min-height: 0; flex: 1; padding: 0 8px 12px; scrollbar-width: thin; scrollbar-color: #26262e transparent; }
+
+    .row {
+      width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 12px; text-align: start;
+      border: 1px solid transparent;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s var(--ease);
+    }
+    .row:hover { background: rgba(255, 255, 255, 0.04); transform: translateX(-2px); }
+    .row.active { background: var(--fuchsia-bg); border-color: rgba(230, 0, 126, 0.3); }
+    .row .meta { flex: 1; min-width: 0; }
+    .row .name { font-weight: 600; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row .sub { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+    .row .sub.online { color: var(--fuchsia-light); }
+    .row .unread {
+      min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--fuchsia); color: #fff;
+      font-size: 11px; font-weight: 700; display: grid; place-items: center; box-shadow: 0 0 10px rgba(230, 0, 126, 0.4);
+    }
+
+    .empty-note { text-align: center; color: var(--muted); font-size: 13px; padding: 28px 16px; line-height: 1.8; }
+
+    /* ---- Main ---- */
+    .main { position: relative; display: flex; flex-direction: column; min-width: 0; background: var(--bg); }
+    .main::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 50% 42%, rgba(230, 0, 126, 0.09), transparent 55%);
+    }
+    .main > * { position: relative; }
+
+    .welcome {
+      flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; gap: 14px; padding: 24px;
+    }
+    .main[data-state="welcome"] .welcome { display: flex; animation: rise 0.6s var(--ease) both; }
+    .main[data-state="chat"] .chat { display: flex; }
+
+    .welcome .logo {
+      width: clamp(72px, 12vw, 108px); height: auto; margin-bottom: 10px;
+      filter: drop-shadow(0 0 8px var(--fuchsia-glow)) drop-shadow(0 0 28px rgba(230, 0, 126, 0.3));
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .welcome h1 { font-size: clamp(22px, 3.4vw, 30px); font-weight: 600; }
+    .welcome p { color: var(--muted); font-size: 15px; max-width: 360px; line-height: 1.8; }
+    .welcome .actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 12px; }
+
+    @keyframes pulse {
+      0%, 100% { filter: drop-shadow(0 0 6px rgba(230, 0, 126, 0.35)) drop-shadow(0 0 20px rgba(230, 0, 126, 0.22)); }
+      50%      { filter: drop-shadow(0 0 10px rgba(230, 0, 126, 0.55)) drop-shadow(0 0 34px rgba(230, 0, 126, 0.38)); }
+    }
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    /* ---- Chat view ---- */
+    .chat { display: none; flex-direction: column; flex: 1; min-height: 0; }
+    .chat-head {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      border-bottom: 1px solid var(--line); background: rgba(8, 8, 12, 0.6);
+    }
+    .chat-head .meta { flex: 1; min-width: 0; }
+    .chat-head .name { font-weight: 600; }
+    .chat-head .sub { font-size: 12px; color: var(--muted); }
+    .chat-head .sub.online { color: var(--fuchsia-light); }
+    .back-btn { display: none; }
+
+    .messages { flex: 1; overflow-y: auto; padding: 18px 16px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: thin; scrollbar-color: #26262e transparent; }
+    .msg {
+      max-width: min(75%, 460px); padding: 10px 14px; border-radius: 16px; line-height: 1.6; word-break: break-word;
+      animation: rise 0.3s var(--ease) both;
+    }
+    .msg .time { display: block; font-size: 10.5px; opacity: 0.55; margin-top: 3px; }
+    .msg.in { align-self: flex-start; background: var(--card); border: 1px solid var(--line); border-top-right-radius: 4px; }
+    .msg.out {
+      align-self: flex-end; color: #fff; border-top-left-radius: 4px;
+      background: linear-gradient(135deg, #a3005a, #d3007a); box-shadow: 0 0 16px rgba(230, 0, 126, 0.22);
+    }
+
+    .composer { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 1px solid var(--line); }
+    .composer input {
+      flex: 1; height: 46px; border-radius: 14px; padding: 0 16px; background: var(--card);
+      border: 1px solid var(--line); outline: none; font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .composer input:focus { border-color: var(--fuchsia); box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.15); }
+    .send-btn {
+      width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff;
+      background: linear-gradient(135deg, #b8005f, var(--fuchsia)); box-shadow: 0 0 14px rgba(230, 0, 126, 0.3);
+      transition: transform 0.2s var(--ease), box-shadow 0.2s;
+    }
+    .send-btn:hover { box-shadow: 0 0 22px rgba(230, 0, 126, 0.5); transform: translateY(-1px); }
+    .send-btn .ic { transform: scaleX(-1); } /* السهم يتجه لليسار في الواجهة العربية */
+
+    /* ---- Online panel (اللوحة اليمنى) ---- */
+    .online {
+      display: flex; flex-direction: column; background: var(--panel); border-left: 1px solid var(--line);
+      transition: transform 0.35s var(--ease), box-shadow 0.4s;
+    }
+    .online.pulse { box-shadow: inset 0 0 0 1px var(--fuchsia), 0 0 24px rgba(230, 0, 126, 0.25); }
+    .online .row .actions { display: flex; gap: 2px; opacity: 0.55; transition: opacity 0.2s; }
+    .online .row:hover .actions { opacity: 1; }
+    .online .icon-btn { width: 34px; height: 34px; }
+    .online .icon-btn .ic { width: 18px; height: 18px; }
+    .drawer-close { display: none; }
+
+    .scrim {
+      position: fixed; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: 40;
+      opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    }
+    .scrim.show { opacity: 1; pointer-events: auto; }
+
+    /* ---- Notifications dropdown ---- */
+    .dropdown {
+      position: absolute; top: 48px; right: 0; width: min(320px, 90vw); z-index: 30;
+      background: var(--card); border: 1px solid var(--line-strong); border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 24px rgba(230, 0, 126, 0.12);
+      opacity: 0; transform: translateY(-6px); pointer-events: none;
+      transition: opacity 0.2s, transform 0.2s var(--ease); direction: rtl;
+    }
+    .dropdown.show { opacity: 1; transform: none; pointer-events: auto; }
+    .dropdown header { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); font-weight: 600; }
+    .dropdown header button { font-size: 12px; color: var(--fuchsia-light); font-weight: 400; }
+    .notif { padding: 12px 14px; font-size: 13px; line-height: 1.7; border-bottom: 1px solid var(--line); }
+    .notif:last-child { border-bottom: none; }
+    .notif small { display: block; color: var(--muted); font-size: 11px; }
+
+    /* ---- Modal ---- */
+    .modal-wrap {
+      position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px;
+      background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-wrap.show { opacity: 1; pointer-events: auto; }
+    .modal {
+      width: 100%; max-width: 400px; background: var(--card); border: 1px solid var(--line-strong);
+      border-radius: 20px; padding: 24px; box-shadow: 0 0 40px rgba(230, 0, 126, 0.15);
+      transform: translateY(12px) scale(0.98); transition: transform 0.3s var(--ease);
+    }
+    .modal-wrap.show .modal { transform: none; }
+    .modal h3 { font-size: 18px; margin-bottom: 6px; }
+    .modal p { color: var(--muted); font-size: 13px; margin-bottom: 16px; line-height: 1.7; }
+    .modal input {
+      width: 100%; height: 46px; border-radius: 12px; padding: 0 14px; background: #08080c;
+      border: 1px solid var(--line); outline: none; font-size: 15px; direction: ltr;
+    }
+    .modal input:focus { border-color: var(--fuchsia); box-shadow: 0 0 0 3px rgba(230, 0, 126, 0.15); }
+    .modal .err { color: #ff5c7a; font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .modal .row-btns { display: flex; gap: 10px; margin-top: 10px; }
+    .modal .row-btns .btn { flex: 1; }
+
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translate(-50%, 20px); z-index: 80;
+      max-width: calc(100vw - 32px); background: #15151c; border: 1px solid var(--fuchsia);
+      padding: 12px 18px; border-radius: 12px; font-size: 13px;
+      box-shadow: 0 0 20px rgba(230, 0, 126, 0.3); opacity: 0; pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s var(--ease);
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    /* ---- Bottom nav (للهاتف فقط) ---- */
+    .bottom-nav { display: none; }
+
+    /* 5) Responsive */
+
+    /* لابتوب صغير / تابلت: اللوحة اليمنى تتحول إلى درج جانبي */
+    @media (max-width: 1100px) {
+      .shell { grid-template-columns: 84px 280px minmax(0, 1fr); }
+      .online {
+        position: fixed; top: var(--topbar-h); bottom: 0; right: 0; width: min(330px, 100%); z-index: 50;
+        transform: translateX(100%); box-shadow: -12px 0 40px rgba(0, 0, 0, 0.6);
+      }
+      .online.open { transform: none; }
+      .drawer-close { display: grid; }
+    }
+
+    /* هاتف */
+    @media (max-width: 760px) {
+      :root { --topbar-h: 56px; }
+      .topbar { padding: 0 12px; }
+      .brand-name { letter-spacing: 0.3em; }
+
+      .shell { grid-template-columns: minmax(0, 1fr); padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); }
+      .rail { display: none; }
+
+      /* الشاشات: home (ترحيب) / messages (قائمة) / chat (محادثة) */
+      .list, .main { display: none; border: none; }
+      body[data-view="messages"] .list { display: flex; }
+      body[data-view="home"] .main,
+      body[data-view="chat"] .main { display: flex; }
+
+      body[data-view="chat"] .shell { padding-bottom: 0; }
+      body[data-view="chat"] .bottom-nav { display: none; }
+      .back-btn { display: grid; }
+      .msg { max-width: 85%; }
+
+      .online { top: var(--topbar-h); bottom: calc(var(--nav-h) + env(safe-area-inset-bottom)); width: 100%; }
+
+      .bottom-nav {
+        display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; direction: ltr;
+        height: calc(var(--nav-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);
+        background: rgba(8, 8, 12, 0.94); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+      }
+      .bottom-nav .nav-btn { flex: 1; width: auto; border-radius: 0; background: none; justify-content: center; }
+      .bottom-nav .nav-btn.active { background: none; }
+      .bottom-nav .nav-btn.active::before { left: 30%; right: 30%; top: 0; bottom: auto; width: auto; height: 3px; border-radius: 0 0 3px 3px; }
+      .bottom-nav .nav-btn .count { right: calc(50% - 22px); }
+      .toast { bottom: calc(var(--nav-h) + 16px); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+
+<body data-view="home">
+
+  <!-- أيقونات SVG (Sprite) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-logo" viewBox="0 0 100 120"><path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.8 0 4.5 1.9 4.5 5"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1C10 20 4 14 4 5a1 1 0 011-1z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-userplus" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M19 8v6M16 11h6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.2-4.2"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16v-5a6 6 0 1112 0v5l2 2H4z"/><path d="M10 21h4"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M3 11.5L21 3l-8.5 18-2.2-7.3z"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  </svg>
+
+  <div class="app">
+
+    <!-- ===== أعلى الصفحة ===== -->
+    <header class="topbar">
+      <a href="index.html?reload=1" class="brand" title="عرض شاشة البداية والتحميل" style="text-decoration:none; cursor:pointer;">
+        <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
+        <span class="brand-name">NovaChat</span>
+      </a>
+
+      <div class="top-actions">
+        <button class="icon-btn" id="topSearch" aria-label="بحث">
+          <svg class="ic"><use href="#i-search"/></svg>
+        </button>
+        <button class="icon-btn" id="bellBtn" aria-label="الإشعارات" aria-expanded="false">
+          <svg class="ic"><use href="#i-bell"/></svg>
+          <span class="badge-dot" id="bellDot"></span>
+        </button>
+        <button class="icon-btn" id="topAvatar" aria-label="حسابي" style="width:auto">
+          <span class="av" style="--s:34px" id="topAvatarEl"></span>
+        </button>
+
+        <div class="dropdown" id="notifMenu" role="menu">
+          <header><span>الإشعارات</span><button id="markRead">تعليم الكل كمقروء</button></header>
+          <div id="notifList"></div>
+        </div>
+
+        <div class="dropdown" id="userMenu" role="menu" style="width: 210px;">
+          <header><span id="userMenuName">حسابي</span></header>
+          <div style="padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+            <a href="index.html?reload=1" class="btn btn-ghost" style="width: 100%; justify-content: flex-start; text-decoration: none; font-size: 13px; height: 38px;">
+              <svg class="ic" style="width: 16px; height: 16px;"><use href="#i-logo"/></svg>
+              شاشة التحميل
+            </a>
+            <button type="button" id="logoutBtn" class="btn btn-ghost" style="width: 100%; justify-content: flex-start; color: #ff5c7a; border-color: rgba(255, 92, 122, 0.3); font-size: 13px; height: 38px;">
+              <svg class="ic" style="width: 16px; height: 16px;"><use href="#i-close"/></svg>
+              تسجيل الخروج
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="shell">
+
+      <!-- ===== الشريط الجانبي (يسار) ===== -->
+      <nav class="rail" aria-label="التنقل الرئيسي">
+        <a href="index.html?reload=1" title="عرض شاشة البداية والتحميل" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
+          <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
+        </a>
+
+        <button class="nav-btn active" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>الرئيسية</button>
+        <button class="nav-btn" data-nav="friends"><svg class="ic"><use href="#i-users"/></svg>الأصدقاء</button>
+        <button class="nav-btn" data-nav="messages"><svg class="ic"><use href="#i-chat"/></svg>الرسائل<span class="count" data-total-unread hidden></span></button>
+        <button class="nav-btn" data-nav="calls"><svg class="ic"><use href="#i-phone"/></svg>المكالمات</button>
+        <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg>الإعدادات</button>
+
+        <div class="rail-sep"></div>
+        <button class="add-server" id="addServer" aria-label="إضافة سيرفر أو مجموعة" title="إضافة سيرفر / مجموعة">
+          <svg class="ic"><use href="#i-plus"/></svg>
+        </button>
+
+        <div class="rail-user">
+          <span class="av" style="--s:40px" id="railAvatar"></span>
+          <span class="u-name" id="railName"></span>
+          <span class="u-status">Online</span>
+        </div>
+      </nav>
+
+      <!-- ===== قائمة المحادثات ===== -->
+      <aside class="list" aria-label="المحادثات">
+        <div class="panel-head">
+          <h2>المحادثات</h2>
+          <span class="count-pill" id="chatCount">0</span>
+        </div>
+
+        <div class="search-box">
+          <svg class="ic"><use href="#i-search"/></svg>
+          <input type="search" id="listSearch" placeholder="ابحث عن مستخدم…" autocomplete="off" />
+        </div>
+
+        <button class="btn btn-primary add-friend" data-open-add>
+          <svg class="ic"><use href="#i-userplus"/></svg>إضافة صديق
+        </button>
+
+        <div class="section-label">الرسائل الخاصة</div>
+        <div class="scroll" id="chatList"></div>
+      </aside>
+
+      <!-- ===== المنتصف ===== -->
+      <main class="main" id="main" data-state="welcome">
+
+        <!-- شاشة الترحيب -->
+        <section class="welcome">
+          <svg class="ic logo" viewBox="0 0 100 120" aria-hidden="true"><use href="#i-logo"/></svg>
+          <h1>مرحبًا بك في NOVACHAT</h1>
+          <p>ابدأ محادثة جديدة أو اختر أحد أصدقائك.</p>
+          <div class="actions">
+            <button class="btn btn-primary" data-open-add><svg class="ic"><use href="#i-userplus"/></svg>إضافة صديق</button>
+            <button class="btn btn-ghost" id="startChat"><svg class="ic"><use href="#i-chat"/></svg>بدء محادثة</button>
+          </div>
+        </section>
+
+        <!-- عرض المحادثة -->
+        <section class="chat" id="chatView">
+          <div class="chat-head">
+            <button class="icon-btn back-btn" id="backBtn" aria-label="رجوع"><svg class="ic"><use href="#i-back"/></svg></button>
+            <span class="av" id="chatAvatar" style="--s:40px"></span>
+            <div class="meta">
+              <div class="name" id="chatName"></div>
+              <div class="sub" id="chatStatus"></div>
+            </div>
+            <button class="icon-btn" data-soon="المكالمات" aria-label="مكالمة"><svg class="ic"><use href="#i-phone"/></svg></button>
+          </div>
+          <div class="messages" id="messages"></div>
+          <form class="composer" id="composer" autocomplete="off">
+            <input type="text" id="msgInput" placeholder="اكتب رسالة…" maxlength="500" />
+            <button class="send-btn" type="submit" aria-label="إرسال"><svg class="ic"><use href="#i-send"/></svg></button>
+          </form>
+        </section>
+      </main>
+
+      <!-- ===== اللوحة اليمنى: المتصلون الآن ===== -->
+      <aside class="online" id="onlinePanel" aria-label="المتصلون الآن">
+        <div class="panel-head">
+          <h2>متصلون الآن</h2>
+          <span class="count-pill" id="onlineCount">0</span>
+          <button class="icon-btn drawer-close" id="drawerClose" aria-label="إغلاق"><svg class="ic"><use href="#i-close"/></svg></button>
+        </div>
+        <div class="scroll" id="onlineList"></div>
+      </aside>
+    </div>
+
+    <!-- ===== شريط التنقل السفلي (هاتف) ===== -->
+    <nav class="bottom-nav" aria-label="التنقل">
+      <button class="nav-btn active" data-nav="home"><svg class="ic"><use href="#i-home"/></svg>الرئيسية</button>
+      <button class="nav-btn" data-nav="friends"><svg class="ic"><use href="#i-users"/></svg>الأصدقاء</button>
+      <button class="nav-btn" data-nav="messages"><svg class="ic"><use href="#i-chat"/></svg>الرسائل<span class="count" data-total-unread hidden></span></button>
+      <button class="nav-btn" data-nav="calls"><svg class="ic"><use href="#i-phone"/></svg>المكالمات</button>
+      <button class="nav-btn" data-nav="settings"><svg class="ic"><use href="#i-gear"/></svg>الإعدادات</button>
+    </nav>
+  </div>
+
+  <div class="scrim" id="scrim"></div>
+
+  <!-- نافذة إضافة صديق -->
+  <div class="modal-wrap" id="addModal" role="dialog" aria-modal="true" aria-labelledby="addTitle">
+    <form class="modal" id="addForm" novalidate>
+      <h3 id="addTitle">إضافة صديق</h3>
+      <p>اكتب اسم المستخدم لإرسال طلب صداقة.</p>
+      <input type="text" id="addInput" placeholder="@username" autocomplete="off" />
+      <div class="err" id="addErr"></div>
+      <div class="row-btns">
+        <button type="button" class="btn btn-ghost" id="addCancel">إلغاء</button>
+        <button type="submit" class="btn btn-primary">إرسال الطلب</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =====================================================
+         بيانات تجريبية — لاحقًا تُستبدل بالبيانات من السيرفر
+         ===================================================== */
+      var ME = { name: 'Nova_User' };
+      try {
+        var savedUser = localStorage.getItem('novachat_user');
+        if (savedUser) {
+          var uObj = JSON.parse(savedUser);
+          if (uObj && uObj.username) {
+            ME.name = uObj.username;
+          }
+        }
+      } catch (e) {}
+
+      var USERS = [
+        { id: 1, name: 'Layla',  status: 'online',  unread: 3, msgs: [['in', 'هلا! شفت التحديث الجديد؟', '10:42'], ['out', 'لسا، شو فيه؟', '10:44'], ['in', 'واجهة جديدة بالكامل 🔥', '10:45']] },
+        { id: 2, name: 'Omar',   status: 'online',  unread: 0, msgs: [['out', 'كيفك يا عمر؟', '09:10'], ['in', 'تمام الحمدلله، وإنت؟', '09:12']] },
+        { id: 3, name: 'Sara',   status: 'away',    unread: 1, msgs: [['in', 'ببعتلك الملفات بعد شوي', '08:30']] },
+        { id: 4, name: 'Yazan',  status: 'online',  unread: 0, msgs: [['in', 'جاهز للمكالمة؟', 'أمس']] },
+        { id: 5, name: 'Dana',   status: 'offline', unread: 0, msgs: [['out', 'يسلموا على المساعدة', 'أمس'], ['in', 'العفو 🌸', 'أمس']] },
+        { id: 6, name: 'Khaled', status: 'offline', unread: 0, msgs: [] },
+        { id: 7, name: 'Rama',   status: 'online',  unread: 0, msgs: [] }
+      ];
+
+      var NOTIFS = [
+        { text: 'Layla أرسلت لك 3 رسائل جديدة', time: 'قبل 5 دقائق' },
+        { text: 'مرحبًا بك في NOVACHAT 🎉', time: 'اليوم' },
+        { text: 'Rama أصبحت متصلة الآن', time: 'اليوم' }
+      ];
+
+      var STATUS_LABEL = { online: 'Online', away: 'Away', offline: 'Offline' };
+
+      /* =====================================================
+         أدوات مساعدة
+         ===================================================== */
+      var $ = function (s, r) { return (r || document).querySelector(s); };
+      var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+      function el(tag, cls, text) {
+        var n = document.createElement(tag);
+        if (cls) n.className = cls;
+        if (text !== undefined) n.textContent = text;
+        return n;
+      }
+
+      function icon(id) {
+        var ns = 'http://www.w3.org/2000/svg';
+        var svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('class', 'ic');
+        var use = document.createElementNS(ns, 'use');
+        use.setAttribute('href', '#' + id);
+        svg.appendChild(use);
+        return svg;
+      }
+
+      function avatar(name, size, status) {
+        var a = el('span', 'av', name.charAt(0).toUpperCase());
+        a.style.setProperty('--s', size + 'px');
+        if (status) a.appendChild(el('span', 'dot ' + status));
+        return a;
+      }
+
+      var isMobile = window.matchMedia('(max-width: 760px)');
+      var isDrawer = window.matchMedia('(max-width: 1100px)');
+
+      var toastEl = $('#toast'), toastTimer;
+      function toast(msg) {
+        toastEl.textContent = msg;
+        toastEl.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2800);
+      }
+
+      /* =====================================================
+         الحالة
+         ===================================================== */
+      var state = { current: null, filter: '' };
+
+      function totalUnread() {
+        return USERS.reduce(function (n, u) { return n + u.unread; }, 0);
+      }
+
+      /* =====================================================
+         العرض (Render)
+         ===================================================== */
+      function renderMe() {
+        [$('#railAvatar'), $('#topAvatarEl')].forEach(function (n) {
+          n.textContent = ME.name.charAt(0).toUpperCase();
+        });
+        $('#railName').textContent = ME.name;
+      }
+
+      function renderUnreadBadges() {
+        var total = totalUnread();
+        $$('[data-total-unread]').forEach(function (b) {
+          b.hidden = total === 0;
+          b.textContent = total > 9 ? '9+' : total;
+        });
+      }
+
+      function lastLine(u) {
+        if (!u.msgs.length) return STATUS_LABEL[u.status];
+        return u.msgs[u.msgs.length - 1][1];
+      }
+
+      function renderList() {
+        var list = $('#chatList');
+        list.textContent = '';
+        var q = state.filter.trim().toLowerCase();
+        var items = USERS.filter(function (u) { return !q || u.name.toLowerCase().indexOf(q) !== -1; });
+
+        $('#chatCount').textContent = USERS.length;
+
+        if (!items.length) {
+          var note = el('div', 'empty-note', 'ما لقينا مستخدم بهذا الاسم.');
+          var b = el('button', 'btn btn-ghost', 'إضافة صديق');
+          b.style.marginTop = '12px';
+          b.setAttribute('data-open-add', '');
+          b.addEventListener('click', openAdd);
+          note.appendChild(document.createElement('br'));
+          note.appendChild(b);
+          list.appendChild(note);
+          return;
+        }
+
+        items.forEach(function (u) {
+          var row = el('button', 'row' + (state.current === u.id ? ' active' : ''));
+          row.type = 'button';
+          row.appendChild(avatar(u.name, 42, u.status));
+
+          var meta = el('div', 'meta');
+          meta.appendChild(el('div', 'name', u.name));
+          meta.appendChild(el('div', 'sub' + (u.msgs.length ? '' : (u.status === 'online' ? ' online' : '')), lastLine(u)));
+          row.appendChild(meta);
+
+          if (u.unread > 0) row.appendChild(el('span', 'unread', u.unread));
+          row.addEventListener('click', function () { openChat(u.id); });
+          list.appendChild(row);
+        });
+      }
+
+      function renderOnline() {
+        var list = $('#onlineList');
+        list.textContent = '';
+        var online = USERS.filter(function (u) { return u.status === 'online'; });
+        $('#onlineCount').textContent = online.length;
+
+        if (!online.length) {
+          list.appendChild(el('div', 'empty-note', 'ما في أصدقاء متصلين حاليًا.'));
+          return;
+        }
+
+        online.forEach(function (u) {
+          var row = el('div', 'row');
+          row.appendChild(avatar(u.name, 40, 'online'));
+
+          var meta = el('div', 'meta');
+          meta.appendChild(el('div', 'name', u.name));
+          meta.appendChild(el('div', 'sub online', 'Online'));
+          row.appendChild(meta);
+
+          var actions = el('div', 'actions');
+          var chat = el('button', 'icon-btn'); chat.type = 'button'; chat.setAttribute('aria-label', 'محادثة مع ' + u.name);
+          chat.appendChild(icon('i-chat'));
+          chat.addEventListener('click', function () { closeDrawer(); openChat(u.id); });
+
+          var call = el('button', 'icon-btn'); call.type = 'button'; call.setAttribute('aria-label', 'مكالمة مع ' + u.name);
+          call.appendChild(icon('i-phone'));
+          call.addEventListener('click', function () { toast('المكالمات قادمة قريبًا'); });
+
+          actions.appendChild(chat); actions.appendChild(call);
+          row.appendChild(actions);
+          list.appendChild(row);
+        });
+      }
+
+      function renderNotifs() {
+        var box = $('#notifList');
+        box.textContent = '';
+        NOTIFS.forEach(function (n) {
+          var d = el('div', 'notif', n.text);
+          d.appendChild(el('small', '', n.time));
+          box.appendChild(d);
+        });
+      }
+
+      /* =====================================================
+         المحادثة
+         ===================================================== */
+      function addMessage(kind, text, time) {
+        var m = el('div', 'msg ' + kind, text);
+        m.appendChild(el('span', 'time', time));
+        var box = $('#messages');
+        box.appendChild(m);
+        box.scrollTop = box.scrollHeight;
+      }
+
+      function openChat(id) {
+        var u = USERS.filter(function (x) { return x.id === id; })[0];
+        if (!u) return;
+        u.unread = 0;
+        state.current = id;
+
+        var head = $('#chatAvatar');
+        head.textContent = u.name.charAt(0).toUpperCase();
+        head.appendChild(el('span', 'dot ' + u.status));
+        $('#chatName').textContent = u.name;
+        var st = $('#chatStatus');
+        st.textContent = STATUS_LABEL[u.status];
+        st.className = 'sub' + (u.status === 'online' ? ' online' : '');
+
+        $('#messages').textContent = '';
+        if (!u.msgs.length) {
+          $('#messages').appendChild(el('div', 'empty-note', 'ابدأ المحادثة مع ' + u.name + ' 👋'));
+        } else {
+          u.msgs.forEach(function (m) { addMessage(m[0], m[1], m[2]); });
+        }
+
+        $('#main').dataset.state = 'chat';
+        setActive('messages');
+        if (isMobile.matches) document.body.dataset.view = 'chat';
+        renderList(); renderUnreadBadges();
+        if (!isMobile.matches) $('#msgInput').focus();
+      }
+
+      function closeChat() {
+        state.current = null;
+        $('#main').dataset.state = 'welcome';
+        document.body.dataset.view = isMobile.matches ? 'messages' : 'home';
+        renderList();
+      }
+
+      $('#composer').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var input = $('#msgInput');
+        var text = input.value.trim();
+        if (!text || state.current === null) return;
+
+        var u = USERS.filter(function (x) { return x.id === state.current; })[0];
+        var time = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+        if (!u.msgs.length) $('#messages').textContent = '';
+        u.msgs.push(['out', text, time]);
+        addMessage('out', text, time);
+        input.value = '';
+        renderList();
+      });
+
+      $('#backBtn').addEventListener('click', closeChat);
+
+      /* =====================================================
+         التنقل
+         ===================================================== */
+      function setActive(name) {
+        $$('[data-nav]').forEach(function (b) { b.classList.toggle('active', b.dataset.nav === name); });
+      }
+
+      function openDrawer() {
+        $('#onlinePanel').classList.add('open');
+        if (!isMobile.matches) $('#scrim').classList.add('show');
+      }
+      function closeDrawer() {
+        $('#onlinePanel').classList.remove('open');
+        $('#scrim').classList.remove('show');
+      }
+
+      function focusSearch() {
+        if (isMobile.matches) document.body.dataset.view = 'messages';
+        setTimeout(function () { $('#listSearch').focus(); }, 50);
+      }
+
+      function handleNav(name) {
+        if (name === 'home') {
+          closeDrawer(); closeChat(); setActive('home');
+          document.body.dataset.view = 'home';
+          if (state.current === null) $('#main').dataset.state = 'welcome';
+        } else if (name === 'messages') {
+          closeDrawer(); setActive('messages'); focusSearch();
+        } else if (name === 'friends') {
+          setActive('friends');
+          if (isDrawer.matches) { openDrawer(); }
+          else {
+            var p = $('#onlinePanel');
+            p.classList.add('pulse');
+            setTimeout(function () { p.classList.remove('pulse'); }, 900);
+          }
+        } else if (name === 'calls') {
+          toast('المكالمات قادمة قريبًا');
+        } else if (name === 'settings') {
+          toast('الإعدادات قادمة قريبًا');
+        }
+      }
+
+      $$('[data-nav]').forEach(function (b) {
+        b.addEventListener('click', function () { handleNav(b.dataset.nav); });
+      });
+
+      $('#drawerClose').addEventListener('click', closeDrawer);
+      $('#scrim').addEventListener('click', closeDrawer);
+      $('#topSearch').addEventListener('click', focusSearch);
+      $('#startChat').addEventListener('click', function () { setActive('messages'); focusSearch(); });
+      $('#listSearch').addEventListener('input', function (e) {
+        state.filter = e.target.value;
+        renderList();
+      });
+
+      /* ---- الإشعارات ---- */
+      var bell = $('#bellBtn'), menu = $('#notifMenu');
+      function closeMenu() { menu.classList.remove('show'); bell.setAttribute('aria-expanded', 'false'); }
+      bell.addEventListener('click', function (e) {
+        e.stopPropagation();
+        closeUserMenu();
+        var open = menu.classList.toggle('show');
+        bell.setAttribute('aria-expanded', open);
+      });
+      menu.addEventListener('click', function (e) { e.stopPropagation(); });
+      document.addEventListener('click', closeMenu);
+      $('#markRead').addEventListener('click', function () { $('#bellDot').hidden = true; closeMenu(); });
+
+      /* ---- قائمة المستخدم وتسجيل الخروج ---- */
+      var userMenu = $('#userMenu');
+      function closeUserMenu() {
+        if (userMenu) userMenu.classList.remove('show');
+      }
+
+      function toggleUserMenu(e) {
+        e.stopPropagation();
+        closeMenu();
+        if (userMenu) {
+          userMenu.classList.toggle('show');
+          var titleEl = $('#userMenuName');
+          if (titleEl) titleEl.textContent = ME.name;
+        }
+      }
+
+      $('#topAvatar').addEventListener('click', toggleUserMenu);
+      var railUser = $('.rail-user');
+      if (railUser) {
+        railUser.style.cursor = 'pointer';
+        railUser.title = 'حسابي وتسجيل الخروج';
+        railUser.addEventListener('click', toggleUserMenu);
+      }
+
+      if (userMenu) userMenu.addEventListener('click', function (e) { e.stopPropagation(); });
+      document.addEventListener('click', closeUserMenu);
+
+      var logoutBtn = $('#logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+          try {
+            localStorage.removeItem('novachat_user');
+          } catch(e) {}
+          toast('تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول...');
+          setTimeout(function () {
+            window.location.href = 'login.html?noload=1';
+          }, 600);
+        });
+      }
+
+      /* ---- نافذة إضافة صديق ---- */
+      var modal = $('#addModal'), addInput = $('#addInput'), addErr = $('#addErr');
+
+      function openAdd() {
+        modal.classList.add('show');
+        addInput.value = ''; addErr.textContent = '';
+        setTimeout(function () { addInput.focus(); }, 80);
+      }
+      function closeAdd() { modal.classList.remove('show'); }
+
+      $$('[data-open-add]').forEach(function (b) { b.addEventListener('click', openAdd); });
+      $('#addCancel').addEventListener('click', closeAdd);
+      modal.addEventListener('click', function (e) { if (e.target === modal) closeAdd(); });
+
+      $('#addForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var name = addInput.value.trim().replace(/^@/, '');
+        if (!/^[A-Za-z0-9_.]{3,20}$/.test(name)) {
+          addErr.textContent = 'اسم مستخدم غير صحيح (3–20 خانة: حروف إنجليزية وأرقام و _ .)';
+          return;
+        }
+        closeAdd();
+        toast('تم إرسال طلب الصداقة إلى @' + name + ' (تجريبي)');
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') { closeAdd(); closeMenu(); closeDrawer(); closeUserMenu(); }
+      });
+
+      /* =====================================================
+         تشغيل
+         ===================================================== */
+      renderMe();
+      renderList();
+      renderOnline();
+      renderNotifs();
+      renderUnreadBadges();
+    })();
+  </script>
+</body>
+</html>

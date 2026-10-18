@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <title>إنشاء حساب | NovaChat</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // التأكد من ظهور شاشة التحميل أولاً إذا لم يتم فتحها في هذه الجلسة
+    try {
+      var isLoaded = sessionStorage.getItem("novachat_loaded");
+      var forceNoLoad = window.location.search.indexOf("noload") !== -1;
+      if (!isLoaded && !forceNoLoad) {
+        window.location.replace("index.html");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="auth-card">
+    <a href="index.html?reload=1" class="brand" title="عرض شاشة التحميل والبداية">
+      <svg viewBox="0 0 100 120" aria-hidden="true">
+        <path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z"/>
+      </svg>
+      <span>NovaChat</span>
+    </a>
+
+    <h2>إنشاء حساب جديد</h2>
+    <p class="sub">انضم إلى NovaChat وابدأ المحادثة</p>
+
+    <button class="btn btn-social" type="button" data-provider="Google">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="#4285F4" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="13" font-weight="700" fill="#4285F4" font-family="Arial, sans-serif">G</text></svg>
+      المتابعة باستخدام Google
+    </button>
+    <button class="btn btn-social" type="button" data-provider="Snapchat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFC00" d="M12 2.5c-3 0-5 2.3-5 5.2v2.6c-.6.1-1.2.4-1.2.9 0 .6.9.9 1.6 1.1-.5 1.6-1.7 2.6-3 3 .2.6 1.2.8 2 .9.2.5.2 1 .6 1.2.6.2 1.4-.2 2.3.2 1 .5 1.7 1.6 2.7 1.6s1.7-1.1 2.7-1.6c.9-.4 1.7 0 2.3-.2.4-.2.4-.7.6-1.2.8-.1 1.8-.3 2-.9-1.3-.4-2.5-1.4-3-3 .7-.2 1.6-.5 1.6-1.1 0-.5-.6-.8-1.2-.9V7.700c0-2.900-2-5.200-5-5.200z"/></svg>
+      المتابعة باستخدام Snapchat
+    </button>
+
+    <div class="divider">أو بالبريد الإلكتروني</div>
+
+    <form id="signupForm" novalidate>
+      <div class="field" id="f-username">
+        <label for="username">اسم المستخدم</label>
+        <input type="text" id="username" placeholder="nova_user" autocomplete="username" dir="ltr" maxlength="20" />
+        <div class="error-msg">من 3 إلى 20 خانة: حروف إنجليزية وأرقام و _ فقط</div>
+      </div>
+
+      <div class="field" id="f-email">
+        <label for="email">البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="name@example.com" autocomplete="email" dir="ltr" />
+        <div class="error-msg">اكتب بريدًا إلكترونيًا صحيحًا</div>
+      </div>
+
+      <div class="field" id="f-pass">
+        <label for="password">كلمة المرور</label>
+        <div class="input-wrap has-toggle">
+          <input type="password" id="password" placeholder="8 خانات على الأقل" autocomplete="new-password" dir="ltr" />
+          <button type="button" class="toggle-pass" data-target="password">إظهار</button>
+        </div>
+        <div class="error-msg">كلمة المرور لازم تكون 8 خانات على الأقل</div>
+      </div>
+
+      <div class="field" id="f-pass2">
+        <label for="password2">تأكيد كلمة المرور</label>
+        <div class="input-wrap has-toggle">
+          <input type="password" id="password2" placeholder="أعد كتابة كلمة المرور" autocomplete="new-password" dir="ltr" />
+          <button type="button" class="toggle-pass" data-target="password2">إظهار</button>
+        </div>
+        <div class="error-msg">كلمتا المرور غير متطابقتين</div>
+      </div>
+
+      <div class="field" id="f-birth">
+        <label for="birth">تاريخ الميلاد</label>
+        <input type="date" id="birth" />
+        <div class="error-msg" id="birthError">اختر تاريخ ميلاد صحيح (العمر 13 سنة أو أكثر)</div>
+      </div>
+
+      <label class="check">
+        <input type="checkbox" id="terms" />
+        <span>أوافق على <a href="#" class="legal">الشروط والأحكام</a> و<a href="#" class="legal">سياسة الخصوصية</a></span>
+      </label>
+      <div class="check-error" id="termsError">لازم توافق على الشروط لإكمال التسجيل</div>
+
+      <button class="btn btn-primary" type="submit" id="submitBtn">إنشاء حساب</button>
+    </form>
+
+    <p class="switch">لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a></p>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var HOME_PAGE = "home.html"; // الانتقال إلى واجهة المحادثات الرئيسية
+      var MIN_AGE = 13;
+
+      var toast = document.getElementById("toast");
+      var toastTimer;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3200);
+      }
+
+      // منع اختيار تاريخ بالمستقبل
+      var birth = document.getElementById("birth");
+      var today = new Date();
+      birth.max = today.toISOString().split("T")[0];
+
+      // إظهار / إخفاء كلمة المرور
+      document.querySelectorAll(".toggle-pass").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var input = document.getElementById(btn.dataset.target);
+          var show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.textContent = show ? "إخفاء" : "إظهار";
+        });
+      });
+
+      // Google / Snapchat
+      document.querySelectorAll(".btn-social").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          showToast("التسجيل عبر " + btn.dataset.provider + " سيكون متاحاً قريباً.");
+        });
+      });
+
+      document.querySelectorAll(".legal").forEach(function (a) {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          showToast("صفحة الشروط والخصوصية قيد الإعداد.");
+        });
+      });
+
+      function setInvalid(id, bad) {
+        document.getElementById(id).classList.toggle("invalid", bad);
+        return !bad;
+      }
+
+      function ageFrom(dateStr) {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return -1;
+        var age = today.getFullYear() - d.getFullYear();
+        var m = today.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < d.getDate())) age--;
+        return age;
+      }
+
+      document.getElementById("signupForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        var username = document.getElementById("username").value.trim();
+        var email = document.getElementById("email").value.trim();
+        var pass = document.getElementById("password").value;
+        var pass2 = document.getElementById("password2").value;
+        var age = ageFrom(birth.value);
+        var agreed = document.getElementById("terms").checked;
+
+        var results = [
+          setInvalid("f-username", !/^[A-Za-z0-9_]{3,20}$/.test(username)),
+          setInvalid("f-email", !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
+          setInvalid("f-pass", pass.length < 8),
+          setInvalid("f-pass2", pass2 !== pass || pass2.length === 0),
+          setInvalid("f-birth", age < MIN_AGE || age > 120)
+        ];
+
+        document.getElementById("termsError").classList.toggle("show", !agreed);
+
+        if (results.indexOf(false) !== -1 || !agreed) return;
+
+        // حفظ الحساب الجديد في المتصفح للدخول المباشر
+        try {
+          localStorage.setItem("novachat_user", JSON.stringify({
+            username: username,
+            email: email,
+            loginTime: new Date().toLocaleTimeString("ar-SA")
+          }));
+        } catch (err) {}
+
+        var btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.textContent = "جاري إنشاء الحساب...";
+        showToast("تم إنشاء الحساب بنجاح! أهلاً بك " + username);
+
+        setTimeout(function () {
+          window.location.href = HOME_PAGE;
+        }, 800);
+      });
+    })();
+  </script>
+</body>
+</html>

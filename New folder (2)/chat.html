@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <title>المحادثات | NovaChat</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-container">
+    <!-- رأس التطبيق العلوي -->
+    <header class="app-header">
+      <a href="index.html?reload=1" class="app-brand" title="عرض شاشة البداية والتحميل">
+        <svg viewBox="0 0 100 120" aria-hidden="true">
+          <path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z"/>
+        </svg>
+        <span>NovaChat</span>
+      </a>
+
+      <div class="header-actions">
+        <div class="user-badge">
+          <div class="user-avatar" id="userAvatar">N</div>
+          <span id="userNameDisplay">مستخدم Nova</span>
+        </div>
+
+        <a href="home.html" class="btn-header" title="الانتقال إلى الواجهة الرئيسية">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 11l9-8 9 8"></path>
+            <path d="M5 10v10h5v-6h4v6h5V10"></path>
+          </svg>
+          الرئيسية
+        </a>
+
+        <a href="index.html?reload=1" class="btn-header" title="إعادة تشغيل شاشة التحميل">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          شاشة التحميل
+        </a>
+
+        <button class="btn-header btn-logout" id="logoutBtn" title="تسجيل الخروج">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          تسجيل الخروج
+        </button>
+      </div>
+    </header>
+
+    <!-- الجسم الرئيسي: القائمة الجانبية + نافذة الشات -->
+    <div class="app-body">
+      <!-- الشريط الجانبي للمحادثات -->
+      <aside class="chat-sidebar">
+        <div class="sidebar-search">
+          <input type="text" id="searchContact" placeholder="بحث في المحادثات..." />
+        </div>
+
+        <div class="chat-list" id="chatList">
+          <div class="chat-item active" data-id="bot">
+            <div class="chat-avatar-wrap">
+              <div class="chat-item-avatar" style="background: linear-gradient(135deg, #e6007e, #4a0026); color: #fff;">AI</div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="chat-item-info">
+              <div class="chat-item-top">
+                <span class="chat-item-name">مساعد Nova الذكي ✨</span>
+                <span class="chat-item-time">الآن</span>
+              </div>
+              <div class="chat-item-msg">أهلاً بك! كيف أقدر أساعدك اليوم؟</div>
+            </div>
+          </div>
+
+          <div class="chat-item" data-id="user1">
+            <div class="chat-avatar-wrap">
+              <div class="chat-item-avatar">س</div>
+              <div class="status-dot"></div>
+            </div>
+            <div class="chat-item-info">
+              <div class="chat-item-top">
+                <span class="chat-item-name">سارة أحمد</span>
+                <span class="chat-item-time">منذ 5 د</span>
+              </div>
+              <div class="chat-item-msg">تمام، بشوف الملف وأرد عليك...</div>
+            </div>
+          </div>
+
+          <div class="chat-item" data-id="support">
+            <div class="chat-avatar-wrap">
+              <div class="chat-item-avatar" style="background: #1e1b4b; color: #818cf8;">د</div>
+            </div>
+            <div class="chat-item-info">
+              <div class="chat-item-top">
+                <span class="chat-item-name">فريق دعم NovaChat</span>
+                <span class="chat-item-time">أمس</span>
+              </div>
+              <div class="chat-item-msg">تم تفعيل حسابك بنجاح. نتمنى لك تجربة ممتعة!</div>
+            </div>
+          </div>
+
+          <div class="chat-item" data-id="group1">
+            <div class="chat-avatar-wrap">
+              <div class="chat-item-avatar" style="background: #142a1e; color: #4ade80;">م</div>
+            </div>
+            <div class="chat-item-info">
+              <div class="chat-item-top">
+                <span class="chat-item-name">مجموعة المطورين 💻</span>
+                <span class="chat-item-time">أمس</span>
+              </div>
+              <div class="chat-item-msg">التصميم الجديد فخم جداً ومرتب!</div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- نافذة المحادثة النشطة -->
+      <section class="chat-window">
+        <!-- شريط المحادثة العلوي -->
+        <div class="window-header">
+          <div class="window-user-info">
+            <div class="window-user-avatar" id="currentContactAvatar">AI</div>
+            <div>
+              <div class="window-user-title" id="currentContactName">مساعد Nova الذكي ✨</div>
+              <div class="window-user-status" id="currentContactStatus">متصل الآن - جاهز للرد</div>
+            </div>
+          </div>
+
+          <div class="window-tools">
+            <button class="tool-btn" id="callBtn" title="مكالمة صوتية">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            </button>
+            <button class="tool-btn" id="videoBtn" title="مكالمة فيديو">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- قائمة الرسائل -->
+        <div class="messages-container" id="messagesContainer">
+          <div class="date-divider">اليوم</div>
+
+          <div class="msg-row in">
+            <div class="msg-bubble">
+              <div id="welcomeGreeting">أهلاً بك في <strong>NovaChat</strong>! 🚀</div>
+              <div style="margin-top: 6px;">تم ربط شاشة التحميل وشاشات تسجيل الدخول بنجاح، ويمكنك الآن تجربة إرسال واستقبال الرسائل مباشرة هنا! كيف يمكنني مساعدتك؟</div>
+              <div class="msg-time">الآن</div>
+            </div>
+          </div>
+
+          <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+          </div>
+        </div>
+
+        <!-- شريط كتابة الرسالة -->
+        <form class="chat-input-bar" id="chatForm">
+          <input type="text" class="chat-input" id="messageInput" placeholder="اكتب رسالتك هنا..." autocomplete="off" />
+          <button type="submit" class="send-btn" title="إرسال">
+            <svg viewBox="0 0 24 24">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var toast = document.getElementById("toast");
+      var toastTimer;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3000);
+      }
+
+      // قراءة بيانات المستخدم الحالي
+      var currentUser = { username: "ضيف Nova", email: "" };
+      try {
+        var saved = localStorage.getItem("novachat_user");
+        if (saved) {
+          currentUser = JSON.parse(saved);
+        }
+      } catch (e) {}
+
+      var userAvatar = document.getElementById("userAvatar");
+      var userNameDisplay = document.getElementById("userNameDisplay");
+      var welcomeGreeting = document.getElementById("welcomeGreeting");
+
+      if (currentUser && currentUser.username) {
+        var cleanName = currentUser.username;
+        userNameDisplay.textContent = cleanName;
+        userAvatar.textContent = cleanName.charAt(0).toUpperCase();
+        welcomeGreeting.innerHTML = "أهلاً بك يا <strong>" + cleanName + "</strong> في <strong>NovaChat</strong>! 🚀";
+      }
+
+      // زر تسجيل الخروج
+      document.getElementById("logoutBtn").addEventListener("click", function () {
+        try {
+          localStorage.removeItem("novachat_user");
+        } catch (e) {}
+        showToast("تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول...");
+        setTimeout(function () {
+          window.location.href = "login.html?noload=1";
+        }, 800);
+      });
+
+      // أزرار الاتصال
+      document.getElementById("callBtn").addEventListener("click", function () {
+        showToast("ميزة المكالمات الصوتية قيد التطوير وستتوفر قريباً!");
+      });
+      document.getElementById("videoBtn").addEventListener("click", function () {
+        showToast("ميزة مكالمات الفيديو عالية الدقة قيد التطوير!");
+      });
+
+      // تبديل المحادثات في القائمة
+      var chatItems = document.querySelectorAll(".chat-item");
+      chatItems.forEach(function (item) {
+        item.addEventListener("click", function () {
+          chatItems.forEach(function (i) { i.classList.remove("active"); });
+          item.classList.add("active");
+          var name = item.querySelector(".chat-item-name").textContent;
+          var avatarText = item.querySelector(".chat-item-avatar").textContent;
+          document.getElementById("currentContactName").textContent = name;
+          document.getElementById("currentContactAvatar").textContent = avatarText;
+          showToast("تم الانتقال إلى محادثة: " + name);
+        });
+      });
+
+      // إرسال الرسائل والتفاعل الذكي
+      var form = document.getElementById("chatForm");
+      var input = document.getElementById("messageInput");
+      var messagesContainer = document.getElementById("messagesContainer");
+      var typingIndicator = document.getElementById("typingIndicator");
+
+      function formatTime() {
+        var d = new Date();
+        var h = d.getHours();
+        var m = d.getMinutes();
+        var ampm = h >= 12 ? 'م' : 'ص';
+        h = h % 12;
+        h = h ? h : 12;
+        return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
+      }
+
+      function appendMessage(text, isOut) {
+        var row = document.createElement("div");
+        row.className = "msg-row " + (isOut ? "out" : "in");
+
+        var bubble = document.createElement("div");
+        bubble.className = "msg-bubble";
+        bubble.textContent = text;
+
+        var time = document.createElement("div");
+        time.className = "msg-time";
+        time.textContent = formatTime();
+
+        bubble.appendChild(time);
+        row.appendChild(bubble);
+
+        // إدراج الرسالة قبل مؤشر الكتابة
+        messagesContainer.insertBefore(row, typingIndicator);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      }
+
+      var botReplies = [
+        "وصلت رسالتك! كل الأمور تمام والملفات الآن مربوطة بشكل سليم وسلس 🌟",
+        "شاشة التحميل الآن تظهر أولاً بشكل تلقائي وتنقلك بسلاسة لشاشة الدخول والدردشة!",
+        "أنا هنا لمساعدتك دائماً في NovaChat، جرّب أزرار التنقل أو تسجيل الخروج لإعادة الاختبار.",
+        "التصميم باللون الفوشي النيون والخلفية الداكنة أصبح متناسقاً عبر كافة الصفحات 🎨"
+      ];
+      var replyIndex = 0;
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var text = input.value.trim();
+        if (!text) return;
+
+        appendMessage(text, true);
+        input.value = "";
+
+        // إظهار جاري الكتابة
+        typingIndicator.classList.add("show");
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        setTimeout(function () {
+          typingIndicator.classList.remove("show");
+          var reply = botReplies[replyIndex % botReplies.length];
+          replyIndex++;
+          appendMessage(reply, false);
+        }, 1100);
+      });
+    })();
+  </script>
+</body>
+</html>

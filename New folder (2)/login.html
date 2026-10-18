@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050508" />
+  <title>تسجيل الدخول | NovaChat</title>
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // التأكد من ظهور شاشة التحميل قبل شاشة تسجيل الدخول
+    try {
+      var isLoaded = sessionStorage.getItem("novachat_loaded");
+      var forceNoLoad = window.location.search.indexOf("noload") !== -1;
+      if (!isLoaded && !forceNoLoad) {
+        window.location.replace("index.html");
+      }
+    } catch (e) {}
+  </script>
+</head>
+<body>
+  <main class="auth-card">
+    <a href="index.html?reload=1" class="brand" title="عرض شاشة التحميل والبداية">
+      <svg viewBox="0 0 100 120" aria-hidden="true">
+        <path d="M0 0 H24 L76 82 V0 H100 V120 H76 L24 38 V120 H0 Z"/>
+      </svg>
+      <span>NovaChat</span>
+    </a>
+
+    <h2>أهلًا بعودتك</h2>
+    <p class="sub">سجّل دخولك لتكمل محادثاتك</p>
+
+    <button class="btn btn-social" type="button" data-provider="Google">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="none" stroke="#4285F4" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="13" font-weight="700" fill="#4285F4" font-family="Arial, sans-serif">G</text></svg>
+      المتابعة باستخدام Google
+    </button>
+    <button class="btn btn-social" type="button" data-provider="Snapchat">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#FFFC00" d="M12 2.5c-3 0-5 2.3-5 5.2v2.6c-.6.1-1.2.4-1.2.9 0 .6.9.9 1.6 1.1-.5 1.6-1.7 2.6-3 3 .2.6 1.2.8 2 .9.2.5.2 1 .6 1.2.6.2 1.4-.2 2.3.2 1 .5 1.7 1.6 2.7 1.6s1.7-1.1 2.7-1.6c.9-.4 1.7 0 2.3-.2.4-.2.4-.7.6-1.2.8-.1 1.8-.3 2-.9-1.3-.4-2.5-1.4-3-3 .7-.2 1.6-.5 1.6-1.1 0-.5-.6-.8-1.2-.9V7.700c0-2.900-2-5.200-5-5.200z"/></svg>
+      المتابعة باستخدام Snapchat
+    </button>
+
+    <div class="divider">أو بالبريد الإلكتروني</div>
+
+    <form id="loginForm" novalidate>
+      <div class="field" id="f-email">
+        <label for="email">البريد الإلكتروني</label>
+        <input type="email" id="email" placeholder="name@example.com" autocomplete="email" dir="ltr" />
+        <div class="error-msg">اكتب بريدًا إلكترونيًا صحيحًا</div>
+      </div>
+
+      <div class="field" id="f-pass">
+        <label for="password">كلمة المرور</label>
+        <div class="input-wrap has-toggle">
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" dir="ltr" />
+          <button type="button" class="toggle-pass" data-target="password">إظهار</button>
+        </div>
+        <div class="error-msg">اكتب كلمة المرور</div>
+      </div>
+
+      <div class="link-row"><a href="#" id="forgot">نسيت كلمة المرور؟</a></div>
+
+      <button class="btn btn-primary" type="submit" id="submitBtn">تسجيل الدخول</button>
+    </form>
+
+    <p class="switch">ما عندك حساب؟ <a href="signup.html">أنشئ حسابًا</a></p>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    (function () {
+      var HOME_PAGE = "home.html"; // الانتقال إلى واجهة المحادثات الرئيسية
+
+      var toast = document.getElementById("toast");
+      var toastTimer;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 3200);
+      }
+
+      // إظهار / إخفاء كلمة المرور
+      document.querySelectorAll(".toggle-pass").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var input = document.getElementById(btn.dataset.target);
+          var show = input.type === "password";
+          input.type = show ? "text" : "password";
+          btn.textContent = show ? "إخفاء" : "إظهار";
+        });
+      });
+
+      // Google / Snapchat
+      document.querySelectorAll(".btn-social").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          showToast("تسجيل الدخول عبر " + btn.dataset.provider + " سيكون متاحاً قريباً عبر الربط السحابي.");
+        });
+      });
+
+      document.getElementById("forgot").addEventListener("click", function (e) {
+        e.preventDefault();
+        showToast("سيتم تفعيل ميزة استعادة كلمة المرور عند ربط خادم NovaChat.");
+      });
+
+      function setInvalid(id, bad) {
+        document.getElementById(id).classList.toggle("invalid", bad);
+        return !bad;
+      }
+
+      document.getElementById("loginForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var email = document.getElementById("email").value.trim();
+        var pass = document.getElementById("password").value;
+
+        var okEmail = setInvalid("f-email", !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
+        var okPass = setInvalid("f-pass", pass.length === 0);
+        if (!okEmail || !okPass) return;
+
+        // حفظ بيانات المستخدم للدخول لواجهة الشات
+        var username = email.split("@")[0];
+        try {
+          localStorage.setItem("novachat_user", JSON.stringify({
+            username: username,
+            email: email,
+            loginTime: new Date().toLocaleTimeString("ar-SA")
+          }));
+        } catch (err) {}
+
+        var btn = document.getElementById("submitBtn");
+        btn.disabled = true;
+        btn.textContent = "جاري تسجيل الدخول...";
+        showToast("أهلاً بك مجدداً يا " + username + "! جاري الدخول...");
+
+        setTimeout(function () {
+          window.location.href = HOME_PAGE;
+        }, 700);
+      });
+    })();
+  </script>
+</body>
+</html>
