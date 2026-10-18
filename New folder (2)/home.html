@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050508" />
   <title>الرئيسية | NovaChat</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <script>
     // التأكد من ظهور شاشة التحميل أولاً
     try {
@@ -15,6 +16,8 @@
       }
     } catch (e) {}
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap');
@@ -626,6 +629,26 @@
         }
       } catch (e) {}
 
+      // التحقق من جلسة Supabase (في حال تسجيل الدخول عبر Google أو Snapchat)
+      if (window.NovaAuth) {
+        window.NovaAuth.getUser().then(function (u) {
+          if (u) {
+            var name = (u.profile && (u.profile.display_name || u.profile.username)) ||
+                       (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name || u.user_metadata.username)) ||
+                       u.email.split('@')[0];
+            ME.name = name;
+            try {
+              localStorage.setItem('novachat_user', JSON.stringify({
+                username: name,
+                email: u.email,
+                id: u.id
+              }));
+            } catch (e) {}
+            renderMe();
+          }
+        }).catch(function () {});
+      }
+
       var USERS = [
         { id: 1, name: 'Layla',  status: 'online',  unread: 3, msgs: [['in', 'هلا! شفت التحديث الجديد؟', '10:42'], ['out', 'لسا، شو فيه؟', '10:44'], ['in', 'واجهة جديدة بالكامل 🔥', '10:45']] },
         { id: 2, name: 'Omar',   status: 'online',  unread: 0, msgs: [['out', 'كيفك يا عمر؟', '09:10'], ['in', 'تمام الحمدلله، وإنت؟', '09:12']] },
@@ -960,10 +983,14 @@
 
       var logoutBtn = $('#logoutBtn');
       if (logoutBtn) {
-        logoutBtn.addEventListener('click', function () {
-          try {
-            localStorage.removeItem('novachat_user');
-          } catch(e) {}
+        logoutBtn.addEventListener('click', async function () {
+          if (window.NovaAuth) {
+            await window.NovaAuth.signOut();
+          } else {
+            try {
+              localStorage.removeItem('novachat_user');
+            } catch(e) {}
+          }
           toast('تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول...');
           setTimeout(function () {
             window.location.href = 'login.html?noload=1';

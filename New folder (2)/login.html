@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050508" />
   <title>تسجيل الدخول | NovaChat</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
   <script>
     // التأكد من ظهور شاشة التحميل قبل شاشة تسجيل الدخول
     try {
@@ -89,10 +92,23 @@
         });
       });
 
-      // Google / Snapchat
+      // Google / Snapchat OAuth
       document.querySelectorAll(".btn-social").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          showToast("تسجيل الدخول عبر " + btn.dataset.provider + " سيكون متاحاً قريباً عبر الربط السحابي.");
+        btn.addEventListener("click", async function () {
+          var provider = btn.dataset.provider;
+          showToast("جاري توجيهك للمتابعة عبر " + provider + "...");
+          try {
+            if (window.NovaAuth) {
+              await window.NovaAuth.signInWithOAuth(provider);
+            }
+          } catch (err) {
+            var msg = err.message || "";
+            if (msg.includes("provider is not enabled") || msg.includes("Unsupported provider") || msg.includes("validation_failed")) {
+              showToast("يرجى تفعيل " + provider + " في لوحة Supabase (Authentication > Providers) أولاً.");
+            } else {
+              showToast("تنبيه: " + msg);
+            }
+          }
         });
       });
 
@@ -113,26 +129,44 @@
 
         var okEmail = setInvalid("f-email", !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email));
         var okPass = setInvalid("f-pass", pass.length === 0);
-        if (!okEmail || !okPass) return;
-
-        // حفظ بيانات المستخدم للدخول لواجهة الشات
-        var username = email.split("@")[0];
-        try {
-          localStorage.setItem("novachat_user", JSON.stringify({
-            username: username,
-            email: email,
-            loginTime: new Date().toLocaleTimeString("ar-SA")
-          }));
-        } catch (err) {}
-
         var btn = document.getElementById("submitBtn");
         btn.disabled = true;
         btn.textContent = "جاري تسجيل الدخول...";
-        showToast("أهلاً بك مجدداً يا " + username + "! جاري الدخول...");
 
-        setTimeout(function () {
-          window.location.href = HOME_PAGE;
-        }, 700);
+        (async function () {
+          try {
+            var userProfile = null;
+            if (window.NovaAuth) {
+              var authRes = await window.NovaAuth.signIn(email, pass);
+              userProfile = await window.NovaAuth.getUser();
+            }
+
+            var username = (userProfile && userProfile.profile && userProfile.profile.username) || email.split("@")[0];
+            try {
+              localStorage.setItem("novachat_user", JSON.stringify({
+                username: username,
+                email: email,
+                id: userProfile ? userProfile.id : null,
+                loginTime: new Date().toLocaleTimeString("ar-SA")
+              }));
+            } catch (err) {}
+
+            showToast("أهلاً بك مجدداً يا " + username + "! جاري الدخول...");
+            setTimeout(function () {
+              window.location.href = HOME_PAGE;
+            }, 800);
+          } catch (error) {
+            btn.disabled = false;
+            btn.textContent = "تسجيل الدخول";
+            var errMsg = error.message || "فشل تسجيل الدخول";
+            if (errMsg.includes("Invalid login credentials")) {
+              errMsg = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+            } else if (errMsg.includes("Email not confirmed")) {
+              errMsg = "يرجى تأكيد بريدك الإلكتروني أولاً أو تفعيل الدخول المباشر من إعدادات Supabase.";
+            }
+            showToast(errMsg);
+          }
+        })();
       });
     })();
   </script>

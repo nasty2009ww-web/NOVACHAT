@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050508" />
   <title>إنشاء حساب | NovaChat</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
   <script>
     // التأكد من ظهور شاشة التحميل أولاً إذا لم يتم فتحها في هذه الجلسة
     try {
@@ -120,10 +123,23 @@
         });
       });
 
-      // Google / Snapchat
+      // Google / Snapchat OAuth
       document.querySelectorAll(".btn-social").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          showToast("التسجيل عبر " + btn.dataset.provider + " سيكون متاحاً قريباً.");
+        btn.addEventListener("click", async function () {
+          var provider = btn.dataset.provider;
+          showToast("جاري توجيهك للمتابعة عبر " + provider + "...");
+          try {
+            if (window.NovaAuth) {
+              await window.NovaAuth.signInWithOAuth(provider);
+            }
+          } catch (err) {
+            var msg = err.message || "";
+            if (msg.includes("provider is not enabled") || msg.includes("Unsupported provider") || msg.includes("validation_failed")) {
+              showToast("يرجى تفعيل " + provider + " في لوحة Supabase (Authentication > Providers) أولاً.");
+            } else {
+              showToast("تنبيه: " + msg);
+            }
+          }
         });
       });
 
@@ -170,23 +186,38 @@
 
         if (results.indexOf(false) !== -1 || !agreed) return;
 
-        // حفظ الحساب الجديد في المتصفح للدخول المباشر
-        try {
-          localStorage.setItem("novachat_user", JSON.stringify({
-            username: username,
-            email: email,
-            loginTime: new Date().toLocaleTimeString("ar-SA")
-          }));
-        } catch (err) {}
-
         var btn = document.getElementById("submitBtn");
         btn.disabled = true;
         btn.textContent = "جاري إنشاء الحساب...";
-        showToast("تم إنشاء الحساب بنجاح! أهلاً بك " + username);
 
-        setTimeout(function () {
-          window.location.href = HOME_PAGE;
-        }, 800);
+        (async function () {
+          try {
+            if (window.NovaAuth) {
+              await window.NovaAuth.signUp(email, pass, username, birth.value);
+            }
+            // حفظ الحساب الجديد في المتصفح للدخول المباشر
+            try {
+              localStorage.setItem("novachat_user", JSON.stringify({
+                username: username,
+                email: email,
+                loginTime: new Date().toLocaleTimeString("ar-SA")
+              }));
+            } catch (err) {}
+
+            showToast("تم إنشاء الحساب بنجاح في NovaChat! مرحباً " + username);
+            setTimeout(function () {
+              window.location.href = HOME_PAGE;
+            }, 1000);
+          } catch (error) {
+            btn.disabled = false;
+            btn.textContent = "إنشاء حساب";
+            var errMsg = error.message || "حدث خطأ أثناء إنشاء الحساب";
+            if (errMsg.includes("already registered") || errMsg.includes("User already registered")) {
+              errMsg = "هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول.";
+            }
+            showToast(errMsg);
+          }
+        })();
       });
     })();
   </script>

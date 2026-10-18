@@ -5,7 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050508" />
   <title>المحادثات | NovaChat</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabaseClient.js"></script>
 </head>
 <body>
   <div class="app-container">
@@ -190,7 +193,7 @@
       }
 
       // قراءة بيانات المستخدم الحالي
-      var currentUser = { username: "ضيف Nova", email: "" };
+      var currentUser = { id: null, username: "ضيف Nova", email: "" };
       try {
         var saved = localStorage.getItem("novachat_user");
         if (saved) {
@@ -202,18 +205,48 @@
       var userNameDisplay = document.getElementById("userNameDisplay");
       var welcomeGreeting = document.getElementById("welcomeGreeting");
 
-      if (currentUser && currentUser.username) {
-        var cleanName = currentUser.username;
-        userNameDisplay.textContent = cleanName;
-        userAvatar.textContent = cleanName.charAt(0).toUpperCase();
-        welcomeGreeting.innerHTML = "أهلاً بك يا <strong>" + cleanName + "</strong> في <strong>NovaChat</strong>! 🚀";
+      function updateUserInfoUI(name) {
+        if (!name) return;
+        userNameDisplay.textContent = name;
+        userAvatar.textContent = name.charAt(0).toUpperCase();
+        welcomeGreeting.innerHTML = "أهلاً بك يا <strong>" + name + "</strong> في <strong>NovaChat</strong>! 🚀";
       }
 
+      if (currentUser && currentUser.username) {
+        updateUserInfoUI(currentUser.username);
+      }
+
+      // التحقق من جلسة Supabase وجلب المستخدم الفعلي
+      (async function initUserSession() {
+        if (window.NovaAuth) {
+          try {
+            var authUser = await window.NovaAuth.getUser();
+            if (authUser) {
+              currentUser.id = authUser.id;
+              if (authUser.profile && authUser.profile.username) {
+                currentUser.username = authUser.profile.username;
+              } else if (authUser.email) {
+                currentUser.username = authUser.email.split("@")[0];
+              }
+              updateUserInfoUI(currentUser.username);
+              // تحديث الـ localStorage
+              localStorage.setItem("novachat_user", JSON.stringify(currentUser));
+            }
+          } catch (e) {
+            console.error("خطأ في جلب جلسة المستخدم:", e);
+          }
+        }
+      })();
+
       // زر تسجيل الخروج
-      document.getElementById("logoutBtn").addEventListener("click", function () {
-        try {
-          localStorage.removeItem("novachat_user");
-        } catch (e) {}
+      document.getElementById("logoutBtn").addEventListener("click", async function () {
+        if (window.NovaAuth) {
+          await window.NovaAuth.signOut();
+        } else {
+          try {
+            localStorage.removeItem("novachat_user");
+          } catch (e) {}
+        }
         showToast("تم تسجيل الخروج بنجاح. جاري نقلك لصفحة الدخول...");
         setTimeout(function () {
           window.location.href = "login.html?noload=1";
@@ -229,11 +262,13 @@
       });
 
       // تبديل المحادثات في القائمة
+      var currentChatId = "bot";
       var chatItems = document.querySelectorAll(".chat-item");
       chatItems.forEach(function (item) {
         item.addEventListener("click", function () {
           chatItems.forEach(function (i) { i.classList.remove("active"); });
           item.classList.add("active");
+          currentChatId = item.dataset.id || "bot";
           var name = item.querySelector(".chat-item-name").textContent;
           var avatarText = item.querySelector(".chat-item-avatar").textContent;
           document.getElementById("currentContactName").textContent = name;
@@ -248,8 +283,8 @@
       var messagesContainer = document.getElementById("messagesContainer");
       var typingIndicator = document.getElementById("typingIndicator");
 
-      function formatTime() {
-        var d = new Date();
+      function formatTime(dateObj) {
+        var d = dateObj ? new Date(dateObj) : new Date();
         var h = d.getHours();
         var m = d.getMinutes();
         var ampm = h >= 12 ? 'م' : 'ص';
@@ -258,17 +293,30 @@
         return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m) + ' ' + ampm;
       }
 
-      function appendMessage(text, isOut) {
+      function appendMessage(text, isOut, senderName, timeStr) {
         var row = document.createElement("div");
         row.className = "msg-row " + (isOut ? "out" : "in");
 
         var bubble = document.createElement("div");
         bubble.className = "msg-bubble";
-        bubble.textContent = text;
+
+        if (!isOut && senderName) {
+          var senderEl = document.createElement("div");
+          senderEl.style.fontSize = "11px";
+          senderEl.style.fontWeight = "bold";
+          senderEl.style.marginBottom = "3px";
+          senderEl.style.color = "#ff3fa4";
+          senderEl.textContent = senderName;
+          bubble.appendChild(senderEl);
+        }
+
+        var textNode = document.createElement("div");
+        textNode.textContent = text;
+        bubble.appendChild(textNode);
 
         var time = document.createElement("div");
         time.className = "msg-time";
-        time.textContent = formatTime();
+        time.textContent = timeStr || formatTime();
 
         bubble.appendChild(time);
         row.appendChild(bubble);
@@ -278,15 +326,43 @@
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
 
+      // جلب الرسائل السابقة من Supabase
+      (async function loadHistoricalMessages() {
+        if (window.NovaChatDB) {
+          try {
+            var msgs = await window.NovaChatDB.getMessages(30);
+            if (msgs && msgs.length > 0) {
+              msgs.forEach(function (m) {
+                var isMe = currentUser.id && m.sender_id === currentUser.id;
+                var senderName = m.profiles ? (m.profiles.display_name || m.profiles.username) : "مستخدم";
+                appendMessage(m.content, isMe, senderName, formatTime(m.created_at));
+              });
+            }
+          } catch (e) {
+            console.error("خطأ في جلب الرسائل:", e);
+          }
+
+          // الاشتراك المباشر بالرسائل الجديدة (Supabase Realtime)
+          window.NovaChatDB.subscribeMessages(function (newMsg) {
+            var isMe = currentUser.id && newMsg.sender_id === currentUser.id;
+            // إذا كانت الرسالة ليست مني، نعرضها فوراً
+            if (!isMe) {
+              var senderName = newMsg.profiles ? (newMsg.profiles.display_name || newMsg.profiles.username) : "مستخدم";
+              appendMessage(newMsg.content, false, senderName, formatTime(newMsg.created_at));
+            }
+          });
+        }
+      })();
+
       var botReplies = [
-        "وصلت رسالتك! كل الأمور تمام والملفات الآن مربوطة بشكل سليم وسلس 🌟",
-        "شاشة التحميل الآن تظهر أولاً بشكل تلقائي وتنقلك بسلاسة لشاشة الدخول والدردشة!",
-        "أنا هنا لمساعدتك دائماً في NovaChat، جرّب أزرار التنقل أو تسجيل الخروج لإعادة الاختبار.",
-        "التصميم باللون الفوشي النيون والخلفية الداكنة أصبح متناسقاً عبر كافة الصفحات 🎨"
+        "وصلت رسالتك عبر Supabase وتم حفظها في قاعدة البيانات السحابية 🚀",
+        "النظام الآن متصل بالكامل بقاعدة البيانات وميزة Realtime مفعّلة!",
+        "أنا هنا لمساعدتك دائماً في NovaChat، استمتع بالمحادثات الفورية.",
+        "التصميم باللون الفوشي النيون والخلفية الداكنة أصبح متناسقاً ومتصلاً بالسحاب 🎨"
       ];
       var replyIndex = 0;
 
-      form.addEventListener("submit", function (e) {
+      form.addEventListener("submit", async function (e) {
         e.preventDefault();
         var text = input.value.trim();
         if (!text) return;
@@ -294,16 +370,27 @@
         appendMessage(text, true);
         input.value = "";
 
-        // إظهار جاري الكتابة
-        typingIndicator.classList.add("show");
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // حفظ الرسالة في Supabase إذا كان المستخدم مسجلاً
+        if (window.NovaChatDB && currentUser.id) {
+          try {
+            await window.NovaChatDB.sendMessage(currentUser.id, text);
+          } catch (err) {
+            console.error("خطأ في حفظ الرسالة بالسيرفر:", err);
+          }
+        }
 
-        setTimeout(function () {
-          typingIndicator.classList.remove("show");
-          var reply = botReplies[replyIndex % botReplies.length];
-          replyIndex++;
-          appendMessage(reply, false);
-        }, 1100);
+        // تفاعل الرد الآلي إذا كانت المحادثة مع المساعد الذكي
+        if (currentChatId === "bot") {
+          typingIndicator.classList.add("show");
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+          setTimeout(function () {
+            typingIndicator.classList.remove("show");
+            var reply = botReplies[replyIndex % botReplies.length];
+            replyIndex++;
+            appendMessage(reply, false, "مساعد Nova الذكي ✨");
+          }, 1100);
+        }
       });
     })();
   </script>
